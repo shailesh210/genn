@@ -145,13 +145,9 @@ void NNmodel::registerSynapsePopulation(unsigned int i /**< index of the synapse
     // TODO: are these sums and padded sums used anywhere at all???
     unsigned int padnN = ceil((double) neuronN[synapseTarget[i]] / (double) synapseBlkSz) * (double) synapseBlkSz;
     if (i == 0) {
-	sumSynapseTrgN.push_back(neuronN[synapseTarget[i]]);
-	padSumSynapseTrgN.push_back(padnN);
 	padSumSynapseKrnl.push_back(padnN);
     }
     else {
-	sumSynapseTrgN.push_back(sumSynapseTrgN[i - 1] + neuronN[synapseTarget[i]]);
-	padSumSynapseTrgN.push_back(padSumSynapseTrgN[i - 1] + padnN);
 	padSumSynapseKrnl.push_back(padSumSynapseKrnl[i - 1] + padnN);
     }
     //fprintf(stderr, " sum of padded postsynaptic neurons for group %u is %u, krnl size is %u\n", i, padSumSynapseTrgN[i],padSumSynapseKrnl[i]);
@@ -584,6 +580,8 @@ void NNmodel::addSynapsePopulation(
     // initially set synapase group indexing variables to device 0 host 0
     synapseDeviceID.push_back(0);
     synapseHostID.push_back(0);
+    if (maxConn.size() < synapseGrpN) maxConn.resize(synapseGrpN);
+    maxConn[i]= neuronN[trgNumber];
 
 // TODO set uses*** variables for synaptic populations  
 }
@@ -612,26 +610,6 @@ void NNmodel::setConstInp(const string sName, /**<  */
   if (globalInp.size() < found+1) globalInp.resize(found+1);
   globalInp[found]= globalInp0;
 
-}
-
-
-//--------------------------------------------------------------------------
-/*! \brief This function re-calculates the block-size-padded sum of threads needed to compute the
-  groups of neurons and synapses assigned to each device. Must be called after changing the
-  hostID:deviceID of any neuron or synapse group.
- */
-//--------------------------------------------------------------------------
-
-void NNmodel::resetPaddedSums()
-{
-  // array for each host with arrays for each device goes here
-  //vector<vector<int> > padSum = int[hostCount][deviceCount]
-
-  for (int synapseGroup = 0; synapseGroup < synapseGrpN; synapseGroup++) {
-
-    // CODE FOR RESETTING PADSUM* VARIABLES GOES HERE (use setMaxConn function)
-
-  }
 }
 
 
@@ -685,11 +663,12 @@ void NNmodel::setSeed(unsigned int inseed /*!< the new seed  */)
 void NNmodel::setMaxConn(const string sname, /**<  */
                          unsigned int maxConnP /**<  */)
 {
+  cout << "resizing maxConn of " << sname << " to " << maxConnP << "..." << endl;
   unsigned int found= findSynapseGrp(sname);
   if (padSumSynapseKrnl.size() < found+1) padSumSynapseKrnl.resize(found+1);
 
   if (synapseConnType[found] == SPARSE){
-    if (maxConn.size() < found+1) maxConn.resize(found+1);
+    if (maxConn.size() < synapseGrpN) maxConn.resize(synapseGrpN);
     maxConn[found]= maxConnP;
 
     // set padnC is the lowest multiple of synapseBlkSz >= maxConn[found]
@@ -701,14 +680,10 @@ void NNmodel::setMaxConn(const string sname, /**<  */
     }
     else {
       unsigned int toOmitK = padSumSynapseKrnl[found]-padSumSynapseKrnl[found-1];
-      //fprintf(stderr, "old padSumSynapseKrnl[%d] is %u\n", found,padSumSynapseKrnl[found]);
       padSumSynapseKrnl[found]=padSumSynapseKrnl[found-1]+padnC;
-      //fprintf(stderr, "padSumSynapseKrnl[%d] is %u\n", found,padSumSynapseKrnl[found]);
       for (int j=found+1;j<padSumSynapseKrnl.size();j++){    	
-	//fprintf(stderr, "old padSumSynapseKrnl[%d] is %u\n",j,padSumSynapseKrnl[j]);
-	padSumSynapseKrnl[j]=padSumSynapseKrnl[j]-toOmitK+padnC;
-	//fprintf(stderr, "padSumSynapseKrnl[%d] is %u\n", j,padSumSynapseKrnl[j]);
-      }
+	      padSumSynapseKrnl[j]=padSumSynapseKrnl[j]-toOmitK+padnC;
+	    }
     }
   }
   else {

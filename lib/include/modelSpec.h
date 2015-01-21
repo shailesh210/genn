@@ -234,8 +234,6 @@ public:
   unsigned int synapseGrpN; //!< Number of synapse groups
   vector<string> synapseName; //!< Names of synapse groups
   //vector<unsigned int>synapseNo; // !<numnber of synapses in a synapse group
-  vector<unsigned int> sumSynapseTrgN; //!< Summed number of target neurons
-  vector<unsigned int> padSumSynapseTrgN; //!< "Padded" summed target neuron numbers
   vector<unsigned int> maxConn; //!< Padded summed maximum number of connections for a neuron in the neuron groups
   vector<unsigned int> padSumSynapseKrnl; //Combination of padSumSynapseTrgN and padSumMaxConn to support both sparse and all-to-all connectivity in a model
   vector<unsigned int> synapseType; //!< Types of synapses
@@ -313,8 +311,6 @@ public:
   void setSeed(unsigned int); //!< Set the random seed (disables automatic seeding if argument not 0).
 
   void checkSizes(unsigned int *, unsigned int *, unsigned int *); //< Check if the sizes of the initialized neuron and synapse groups are correct.
-
-  void resetPaddedSums(); //!< Re-calculates the block-size-padded sum of threads needed to compute the groups of neurons and synapses assigned to each device. Must be called after changing the hostID:deviceID of any group.
 
   void setGPUDevice(int); //!< Method to choose the GPU to be used for the model. If "AUTODEVICE' (-1), GeNN will choose the device based on a heuristic rule.
 
