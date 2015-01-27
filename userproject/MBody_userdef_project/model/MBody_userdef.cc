@@ -18,7 +18,7 @@
 */
 //--------------------------------------------------------------------------
 
-#define DT 0.2  //!< This defines the global time step at which the simulation will run
+#define DT 0.1  //!< This defines the global time step at which the simulation will run
 #include "modelSpec.h"
 #include "modelSpec.cc"
 #include "sizes.h"
@@ -39,15 +39,14 @@ double myPOI_ini[3]= {
   -10.0        // 2 - SpikeTime
 };
 
-double stdTM_p[8]= {
+double stdTM_p[7]= {
   7.15,          // 0 - gNa: Na conductance in 1/(mOhms * cm^2)
   50.0,          // 1 - ENa: Na equi potential in mV
   1.43,          // 2 - gK: K conductance in 1/(mOhms * cm^2)
   -95.0,         // 3 - EK: K equi potential in mV
   0.02672,       // 4 - gl: leak conductance in 1/(mOhms * cm^2)
   -63.563,       // 5 - El: leak equi potential in mV
-  0.143,          // 6 - Cmem: membr. capacity density in muF/cm^2
-  5              // 7 - ntimes: number of inner iterations for better precision
+  0.143          // 6 - Cmem: membr. capacity density in muF/cm^2
 };
 
 
@@ -86,7 +85,7 @@ double myLHIKC_p[2]= {
 };
 
 double myLHIKC_ini[1] = {
-    0.35/_NLHI   // 0 - g: initial synaptic conductance
+    1.0/_NLHI   // 0 - g: initial synaptic conductance
 };
 
 double postExpLHIKC[2]={
@@ -118,7 +117,7 @@ double postExpKCDN[2]={
   0.0		  // 1 - Erev: Reversal potential
 };
 
-double myDNDN_p[4]= {
+double myDNDN_p[2]= {
   -30.0,         // 0 - Epre: Presynaptic threshold potential 
   50.0           // 1 - Vslope: Activation slope of graded release 
 };
@@ -128,7 +127,7 @@ double myDNDN_ini[1]={
 };
 
 double postExpDNDN[2]={
-  8.0,            // 0 - tau_S: decay time constant for S [ms]
+  2.5,            // 0 - tau_S: decay time constant for S [ms]
   -92.0		  // 1 - Erev: Reversal potential
 };
 
@@ -264,9 +263,9 @@ void modelDefinition(NNmodel &model)
   ngradsynapse.pNames.push_back(tS("Vslope")); 
   ngradsynapse.dpNames.clear();
   // code for presynaptic spike event (defined by Epre)
-  ngradsynapse.simCodeEvnt = tS("$(addtoinSyn) = $(g)* tanh(($(V_pre) - ($(Epre)))*DT*2/$(Vslope));\n\
- 				 $(updatelinsyn); \n\
-  ");
+  ngradsynapse.simCodeEvnt = tS("$(addtoinSyn) = $(g) * tanh(($(V_pre) - $(Epre)) / $(Vslope))* DT;\n\
+    if ($(addtoinSyn) < 0) $(addtoinSyn) = 0.0;\n\
+    $(updatelinsyn);\n");
   // definition of presynaptic spike event 
   ngradsynapse.evntThreshold = tS("    $(V_pre) > $(Epre)");
   weightUpdateModels.push_back(ngradsynapse);
@@ -336,12 +335,12 @@ void modelDefinition(NNmodel &model)
   learn1synapse.needPostSt= TRUE;
   weightUpdateModels.push_back(learn1synapse);
   unsigned int LEARN1SYNAPSE_userdef=weightUpdateModels.size()-1; //this is the synapse index to be used in addSynapsePopulation
-  model.setGPUDevice(0); //force using device 0 for benchmarking 
+
   model.setName("MBody_userdef");
   model.addNeuronPopulation("PN", _NAL, POISSONNEURON, myPOI_p, myPOI_ini);
-  model.addNeuronPopulation("KC", _NMB, TRAUBMILES_PSTEP, stdTM_p, stdTM_ini);
-  model.addNeuronPopulation("LHI", _NLHI, TRAUBMILES_PSTEP, stdTM_p, stdTM_ini);
-  model.addNeuronPopulation("DN", _NLB, TRAUBMILES_PSTEP, stdTM_p, stdTM_ini);
+  model.addNeuronPopulation("KC", _NMB, TRAUBMILES, stdTM_p, stdTM_ini);
+  model.addNeuronPopulation("LHI", _NLHI, TRAUBMILES, stdTM_p, stdTM_ini);
+  model.addNeuronPopulation("DN", _NLB, TRAUBMILES, stdTM_p, stdTM_ini);
   
   model.addSynapsePopulation("PNKC", NSYNAPSE_userdef, SPARSE, INDIVIDUALG, NO_DELAY, EXPDECAY_EVAR, "PN", "KC", myPNKC_ini, myPNKC_p, postSynV_EXPDECAY_EVAR,postExpPNKC);
   model.setMaxConn("PNKC", _NMB);  
