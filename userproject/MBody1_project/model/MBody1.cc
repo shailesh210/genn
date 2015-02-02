@@ -18,7 +18,7 @@
 */
 //--------------------------------------------------------------------------
 
-#define DT 0.2  //!< This defines the global time step at which the simulation will run
+#define DT 0.1  //!< This defines the global time step at which the simulation will run
 #include "modelSpec.h"
 #include "modelSpec.cc"
 #include "sizes.h"
@@ -38,15 +38,14 @@ double myPOI_ini[3]= {
   -10.0        // 2 - SpikeTime
 };
 
-double stdTM_p[8]= {
+double stdTM_p[7]= {
   7.15,          // 0 - gNa: Na conductance in 1/(mOhms * cm^2)
   50.0,          // 1 - ENa: Na equi potential in mV
   1.43,          // 2 - gK: K conductance in 1/(mOhms * cm^2)
   -95.0,         // 3 - EK: K equi potential in mV
   0.02672,       // 4 - gl: leak conductance in 1/(mOhms * cm^2)
   -63.563,       // 5 - El: leak equi potential in mV
-  0.143,          // 6 - Cmem: membr. capacity density in muF/cm^2
-  5              // 7 - ntimes: number of inner iterations for better precision
+  0.143          // 6 - Cmem: membr. capacity density in muF/cm^2
 };
 
 
