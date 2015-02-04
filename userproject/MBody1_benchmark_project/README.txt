@@ -4,9 +4,10 @@
   =============================================
 
 This is a copy of the MBody1 example with the difference that
-- it uses TRAUBMILES_PSTEP as neuron model, and
+- it uses TRAUBMILES_PSTEP as neuron model, and DT = 0.2 ms with 5 inner loops in neuron model
 - KCDN synapses are generated with the alternative gen_kcdn_syns_fixto10K method in order to
-avoid negative tail of the weight distribution, 
+avoid negative tail of the weight distribution, and to keep the number of synapses per neruron
+around 10K.
 
  To compile it, simply type:
   nmake /f WINmakefile
