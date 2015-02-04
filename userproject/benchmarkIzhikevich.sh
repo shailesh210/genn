@@ -24,11 +24,11 @@ custommsg=$4
 
 echo "running " ${ntimes} " times starting from " ${nNeuronsFirst}
 
-((nTotal=${nNeuronsFirst}/10))
+((nTotal=${nNeuronsFirst}/2))
 
 for ((ttest = 1; ttest <= ${ntimes}; ttest++));  
 do
-  ((nTotal=10*${nTotal}))
+  ((nTotal=2*${nTotal}))
   echo "nTotal is " ${nTotal}
   printf "\n\n***********************Izhikevich GPU generating code ****************************\n"
   

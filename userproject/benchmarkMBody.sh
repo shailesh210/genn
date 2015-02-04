@@ -6,7 +6,7 @@ CONNPATH=$(pwd);
 echo "model path:" $CONNPATH
 OUTNAME=$1;
 echo "output name:" $OUTNAME
-cd MBody1_project;
+cd MBody1_benchmark_project;
 #mkdir -p ~/benchmark/MBody_results
 
 #if [ -d "$BmDir" ]; then
@@ -25,11 +25,11 @@ custommsg=$4
 
 echo "running " ${ntimes} " times starting from " ${nNeuronsFirst}
 
-((nMB=${nNeuronsFirst}/10))
+((nMB=${nNeuronsFirst}/2))
 
 for ((ttest = 1; ttest <= ${ntimes}; ttest++));  
 do
-  ((nMB=10*${nMB}))
+  ((nMB=2*${nMB}))
   echo "nMB is " ${nMB}
   printf "\n\n***********************MBody1 GPU generating code ****************************\n"
 
@@ -61,7 +61,7 @@ do
   cp ${OUTNAME}_output/${OUTNAME}.inpat* $GENN_PATH/userproject/benchmark/MBody_results/${OUTNAME}_output/${nMB}/ -R
 
  
-  cd ../MBody_userdef_project;
+  cd ../MBody_userdef_benchmark_project;
  printf "\n\n***********************MBody_userdef GPU generating code ****************************\n"
   #cp -R ../MBody1_project/${OUTNAME}_output .
   mkdir -p ${OUTNAME}_output
@@ -70,7 +70,7 @@ do
   cp -R $GENN_PATH/userproject/benchmark/MBody_results/${OUTNAME}_output/${nMB}/* ${OUTNAME}_output/
   ./generate_run 1 100 ${nMB} 20 100 0.0025 ${OUTNAME} MBody_userdef 0 FLOAT 1
 
-  cd ../MBody1_project;
+  cd ../MBody1_benchmark_project;
 
 
   for dumbcntr in {1..2}
@@ -81,21 +81,21 @@ do
       printf "\n\n***********************MBody1 CPU "${dumbcntr}" nMB = ${nMB} ****************************\n"
       model/classol_sim ${OUTNAME} 0	
     
-      cd ../MBody_userdef_project
+      cd ../MBody_userdef_benchmark_project
       printf "\n\n***********************MBody_userdef GPU "${dumbcntr}" nMB = ${nMB} ****************************\n"
       printf "With ref setup... \n"  >> ${OUTNAME}_output/${OUTNAME}.time
       model/classol_sim ${OUTNAME} 1
       printf "\n\n***********************MBody_userdef CPU "${dumbcntr}"  nMB = ${nMB} ****************************\n"
       model/classol_sim ${OUTNAME} 0	
-      cd ../MBody1_project
+      cd ../MBody1_benchmark_project
   done
   echo "ntimes is" ${ntimes} " testt is " ${testt}
 done
   cd ..
 
   #cp MBody1_project ~/benchmark/MBody_results -R
-  tail -n 15 MBody1_project/${OUTNAME}_output/${OUTNAME}.time
-  tail -n 15 MBody_userdef_project/${OUTNAME}_output/${OUTNAME}.time
+  tail -n 15 MBody1_benchmark_project/${OUTNAME}_output/${OUTNAME}.time
+  tail -n 15 MBody_userdef_benchmark_project/${OUTNAME}_output/${OUTNAME}.time
 
   echo "Benchmarking complete!"
 
