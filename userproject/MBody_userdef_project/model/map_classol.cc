@@ -27,9 +27,6 @@
 #include "sparseUtils.cc"
 #include "map_classol.h"
 
-#ifdef TIMING
-StopWatchInterface *timer_gen;
-#endif
 
 //--------------------------------------------------------------------------
 //--------------------------------------------------------------------------
@@ -163,7 +160,6 @@ void classol::read_pnkcsyns(FILE *f //!< File handle for a file containing PN to
     fprintf(stdout, "%f ", gpPNKC[i]);
   }
   fprintf(stdout,"\n\n");
-  scalar asGoodAsZero = 2.0*SCALAR_MIN;//as far as we are concerned. Remember floating point errors (2 * epsilon)
   unsigned int connN = countEntriesAbove(gpPNKC, model.neuronN[0] * model.neuronN[1], asGoodAsZero);
   allocatePNKC(connN);
   setSparseConnectivityFromDense(gPNKC, model.neuronN[0], model.neuronN[1], gpPNKC, &CPNKC);
@@ -250,8 +246,6 @@ void classol::read_kcdnsyns(FILE *f //!< File handle for a file containing KC to
     fprintf(stdout, "%.8f ", gpKCDN[i]);
   }
   fprintf(stdout, "\n\n");
-
-  scalar asGoodAsZero = 2.0*SCALAR_MIN;//as far as we are concerned. Remember floating point errors (2 * epsilon)
 
 	unsigned int connN = countEntriesAbove(gpKCDN, model.neuronN[1] * model.neuronN[3], asGoodAsZero);
 //  connN = locust.model.neuronN[1] * locust.model.neuronN[3];
