@@ -1,12 +1,13 @@
 #!/bin/bash
 set -e #exit if error or segfault. Turn it off for benchmarking -- big networks are expected to fail on the GPU
 # bash benchmarkIzhikevich.sh bmtest 4 1000 "what is new" 2>&1 |tee bmout_izhikevich #fails at ntimes=6 (hits global mem limit) 
-
+BMPATH=$HOME/GeNNBM/userproject/benchmark
 CONNPATH=$(pwd);
 echo "model path:" $CONNPATH
 OUTNAME=$1;
 echo "output name:" $OUTNAME
 cd Izh_sparse_project;
+
 
 #if [ -d "$BmDir" ]; then
 #  echo "benchmarking directory exists. Using input data from" $BmDir 
@@ -38,13 +39,13 @@ do
     printf "Running for the first time"
   fi
   
-  if [ -d "$GENN_PATH/userproject/benchmark/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}" ]; then 
+  if [ -d "$BMPATH/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}" ]; then 
     echo "Dir exists. Copying files and running with the reference input..."
-    cp -R $GENN_PATH/userproject/benchmark/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}/* inputfiles/
-    ./generate_run 1 ${nTotal} 1000 1 ${OUTNAME} Izh_sparse 0 FLOAT 1
+    cp -R $BMPATH/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}/* inputfiles/
+    ./generate_run 1 ${nTotal} 1000 1 ${OUTNAME} Izh_sparse 0 DOUBLE 1
   else
     echo "Running with new input files."
-    ./generate_run 1 ${nTotal} 1000 1 ${OUTNAME} Izh_sparse 0 FLOAT 0
+    ./generate_run 1 ${nTotal} 1000 1 ${OUTNAME} Izh_sparse 0 DOUBLE 0
   fi
   
   #printf "\n #\n # copying \n #\n #\n"
@@ -54,12 +55,12 @@ do
   #cp ${OUTNAME}_output/${OUTNAME}.inpat* ../MBody_userdef_project/${OUTNAME}_output/ -R
   
   #do the following only once
-  if [ -d "$GENN_PATH/userproject/benchmark/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}" ]; then 
+  if [ -d "$BMPATH/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}" ]; then 
     echo "Dir exists. not copying."
   else
     echo "making directory and copying input files..."
-    mkdir -p $GENN_PATH/userproject/benchmark/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}
-    cp -R inputfiles/* $GENN_PATH/userproject/benchmark/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}/
+    mkdir -p $BMPATH/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}
+    cp -R inputfiles/* $BMPATH/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}/
     #cp ${OUTNAME}_output/${OUTNAME}.pnkc* ~/benchmark/Izhikevich_results/${OUTNAME}_output/${nTotal}/ -R
     #cp ${OUTNAME}_output/${OUTNAME}.pnlhi* ~/benchmark/Izhikevich_results/${OUTNAME}_output/${nTotal}/ -R
     #cp ${OUTNAME}_output/${OUTNAME}.inpat* ~/benchmark/Izhikevich_results/${OUTNAME}_output/${nTotal}/ -R

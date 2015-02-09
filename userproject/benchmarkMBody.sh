@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e #exit if error or segfault. Turn it off for benchmarking -- big networks are expected to fail on the GPU
-# bash benchmarkMBody.sh bmtest3 4 100 "what is new" 2>&1 |tee bmout_mbody #fails at ntimes=5 (hits global mem limit)
+# bash benchmarkMBody.sh bmtest3 10 250 "what is new" 2>&1 |tee bmout_mbody #fails at 1M KCs on Tesla (hits global mem limit)
 
 CONNPATH=$(pwd);
 echo "model path:" $CONNPATH
