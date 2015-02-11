@@ -94,7 +94,9 @@ done
   cd ..
 
   #cp MBody1_project ~/benchmark/MBody_results -R
+  echo "MBody1 tail"
   tail -n 15 MBody1_benchmark_project/${OUTNAME}_output/${OUTNAME}.time
+  echo "MBody_userdef tail"
   tail -n 15 MBody_userdef_benchmark_project/${OUTNAME}_output/${OUTNAME}.time
 
   echo "Benchmarking complete!"
