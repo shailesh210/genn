@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
 
   t= 0.0;
   int done= 0;
-  float last_t_report=  t;
+  //float last_t_report=  t;
   PCNN.run(DT, which);
   copySpikeNFromDevice();
   copySpikesFromDevice();
@@ -236,13 +236,13 @@ int main(int argc, char *argv[])
       copySpikesFromDevice();
       PCNN.sum_spikes();
 
-      for (int i= 0; i < glbSpkCntPExc[0]; i++) {
+      /*for (int i= 0; i < glbSpkCntPExc[0]; i++) {
 		    fprintf(osf2,"%f %d\n", t, glbSpkPExc[i]);
       }
 
       for (int i= 0; i < glbSpkCntPInh[0]; i++) {
         fprintf(osf2, "%f %d\n", t, PCNN.model.sumNeuronN[0]+glbSpkPInh[i]);
-      }
+      }*/
       //end output_spikes
       
       //fprintf(osf, "%f ", t);
@@ -272,13 +272,13 @@ int main(int argc, char *argv[])
       PCNN.sum_spikes();
       //PCNN.output_spikes(osf2, which);
  
-      for (int i= 0; i < glbSpkCntPExc[0]; i++) {
+      /*for (int i= 0; i < glbSpkCntPExc[0]; i++) {
 		    fprintf(osf2,"%f %d\n", t, glbSpkPExc[i]);
       }
 
       for (int i= 0; i < glbSpkCntPInh[0]; i++) {
         fprintf(osf2, "%f %d\n", t, PCNN.model.sumNeuronN[0]+glbSpkPInh[i]);
-      }
+      }*/
       //end output_spikes
       //fprintf(osf, "%f ", t);
       //PCNN.write_input_to_file(osf2);
