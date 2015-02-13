@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e #exit if error or segfault. Turn it off for benchmarking -- big networks are expected to fail on the GPU
-# bash benchmarkIzhikevich.sh bmtest 4 1000 "what is new" 2>&1 |tee bmout_izhikevich #fails at ntimes=6 (hits global mem limit) 
+# bash benchmarkIzhikevich.sh bmtest 4 1000 "what is new" GPUID+2 2>&1 |tee bmout_izhikevich #fails at ntimes=6 (hits global mem limit) 
 BMPATH=$GENN_PATH/userproject/benchmark
 CONNPATH=$(pwd);
 echo "model path:" $CONNPATH
@@ -22,6 +22,7 @@ cd Izh_sparse_project;
 ntimes=$2
 nNeuronsFirst=$3
 custommsg=$4
+GPUID=$5
 
 echo "running " ${ntimes} " times starting from " ${nNeuronsFirst}
 
@@ -42,10 +43,10 @@ do
   if [ -d "$BMPATH/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}" ]; then 
     echo "Dir exists. Copying files and running with the reference input..."
     cp -R $BMPATH/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}/* inputfiles/
-    ./generate_run 1 ${nTotal} 1000 1 ${OUTNAME} Izh_sparse 0 FLOAT 1
+    ./generate_run ${GPUID} ${nTotal} 1000 1 ${OUTNAME} Izh_sparse 0 FLOAT 1
   else
     echo "Running with new input files."
-    ./generate_run 1 ${nTotal} 1000 1 ${OUTNAME} Izh_sparse 0 FLOAT 0
+    ./generate_run ${GPUID} ${nTotal} 1000 1 ${OUTNAME} Izh_sparse 0 FLOAT 0
   fi
   
   #printf "\n #\n # copying \n #\n #\n"
