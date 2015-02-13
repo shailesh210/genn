@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e #exit if error or segfault. Turn it off for benchmarking -- big networks are expected to fail on the GPU
-# bash benchmarkMBody.sh bmtest3 10 250 "what is new" 2>&1 |tee bmout_mbody #fails at 1M KCs on Tesla (hits global mem limit)
+# bash benchmarkMBody.sh bmtest3 10 250 "what is new" GPUID+2 2>&1 |tee bmout_mbody #fails at 1M KCs on Tesla (hits global mem limit)
 
 CONNPATH=$(pwd);
 echo "model path:" $CONNPATH
@@ -22,6 +22,7 @@ cd MBody1_benchmark_project;
 ntimes=$2
 nNeuronsFirst=$3
 custommsg=$4
+GPUID=$5
 
 echo "running " ${ntimes} " times starting from " ${nNeuronsFirst}
 
@@ -44,15 +45,15 @@ do
     echo "Dir exists. Copying files and running with the reference input..."
     mkdir -p ${OUTNAME}_output
     cp -R $GENN_PATH/userproject/benchmark/MBody_results/${OUTNAME}_output/${nMB}/* ${OUTNAME}_output/
-    ./generate_run 1 100 ${nMB} 20 100 0.0025 ${OUTNAME} MBody1 0 FLOAT 1
+    ./generate_run ${GPUID} 100 ${nMB} 20 100 0.0025 ${OUTNAME} MBody1 0 FLOAT 1
   else
     mkdir -p "$GENN_PATH/userproject/benchmark/MBody_results/${OUTNAME}_output/${nMB}"
     echo "Running with new input files."
-    ./generate_run 1 100 ${nMB} 20 100 0.0025 ${OUTNAME} MBody1 0 FLOAT 0
+    ./generate_run ${GPUID} 100 ${nMB} 20 100 0.0025 ${OUTNAME} MBody1 0 FLOAT 0
   fi
 
 
-  ./generate_run 1 100 ${nMB} 20 100 0.0025 ${OUTNAME} MBody1 0 FLOAT 0 
+  ./generate_run ${GPUID} 100 ${nMB} 20 100 0.0025 ${OUTNAME} MBody1 0 FLOAT 0 
   
   printf "\n #\n # copying \n #\n #\n"
   cp ${OUTNAME}_output/${OUTNAME}.kcdn* $GENN_PATH/userproject/benchmark/MBody_results/${OUTNAME}_output/${nMB}/ -R
@@ -68,7 +69,7 @@ do
   echo ${custommsg} >> ${OUTNAME}_output/${OUTNAME}.time
   printf "With new setup... \n"  >> ${OUTNAME}_output/${OUTNAME}.time
   cp -R $GENN_PATH/userproject/benchmark/MBody_results/${OUTNAME}_output/${nMB}/* ${OUTNAME}_output/
-  ./generate_run 1 100 ${nMB} 20 100 0.0025 ${OUTNAME} MBody_userdef 0 FLOAT 1
+  ./generate_run ${GPUID} 100 ${nMB} 20 100 0.0025 ${OUTNAME} MBody_userdef 0 FLOAT 1
 
   cd ../MBody1_benchmark_project;
 

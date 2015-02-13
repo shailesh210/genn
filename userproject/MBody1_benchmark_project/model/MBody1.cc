@@ -23,8 +23,6 @@
 #include "modelSpec.cc"
 #include "sizes.h"
 
-int nGPU= 0;
-
 double myPOI_p[4]= {
   0.1,        // 0 - firing rate
   2.5,        // 1 - refratory period
@@ -144,7 +142,6 @@ double *postSynV = NULL;
 void modelDefinition(NNmodel &model) 
 {
     initGeNN();
-    model.setGPUDevice(0); //force using device 0 for benchmarking  
     model.setName("MBody1");
     model.addNeuronPopulation("PN", _NAL, POISSONNEURON, myPOI_p, myPOI_ini);
     model.addNeuronPopulation("KC", _NMB, TRAUBMILES_PSTEP, stdTM_p, stdTM_ini);
@@ -156,7 +153,11 @@ void modelDefinition(NNmodel &model)
     model.addSynapsePopulation("LHIKC", NGRADSYNAPSE, ALLTOALL, GLOBALG, NO_DELAY, EXPDECAY, "LHI", "KC",  myLHIKC_ini, myLHIKC_p, postSynV, postExpLHIKC);
     model.addSynapsePopulation("KCDN", LEARN1SYNAPSE, ALLTOALL, INDIVIDUALG, NO_DELAY, EXPDECAY, "KC", "DN",  myKCDN_ini,  myKCDN_p, postSynV, postExpKCDN);
     model.addSynapsePopulation("DNDN", NGRADSYNAPSE, ALLTOALL, GLOBALG, NO_DELAY, EXPDECAY, "DN", "DN", myDNDN_ini, myDNDN_p, postSynV, postExpDNDN);     
+    
+  #ifdef nGPU 
+    cerr << "nGPU: " << nGPU << endl;
     model.setGPUDevice(nGPU);
+  #endif 
     model.setSeed(1234);
     model.setPrecision(_FTYPE);
     model.setTiming(TRUE);
