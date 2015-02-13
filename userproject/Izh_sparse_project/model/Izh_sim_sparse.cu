@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
   	   xorwow_setup(devStates, PCNN.model.neuronN[0]); //setup the prng for the bigger network only
 
 	   generate_random_gpuInput_xorwow<<<sGrid0,sThreads>>>(devStates, PCNN.d_input1, PCNN.model.neuronN[0], meanInpExc, (scalar) 0.0);
-	   generate_random_gpuInput_xorwow<<<sGrid1,sThreads>>>(devStates, PCNN.d_input2, PCNN.model.neuronN[1], meanInpExc, (scalar) 0.0); 
+	   generate_random_gpuInput_xorwow<<<sGrid1,sThreads>>>(devStates, PCNN.d_input2, PCNN.model.neuronN[1], meanInpInh, (scalar) 0.0); 
 
   	}  
   
@@ -236,13 +236,13 @@ int main(int argc, char *argv[])
       copySpikesFromDevice();
       PCNN.sum_spikes();
 
-      /*for (int i= 0; i < glbSpkCntPExc[0]; i++) {
+      for (int i= 0; i < glbSpkCntPExc[0]; i++) {
 		    fprintf(osf2,"%f %d\n", t, glbSpkPExc[i]);
       }
 
       for (int i= 0; i < glbSpkCntPInh[0]; i++) {
         fprintf(osf2, "%f %d\n", t, PCNN.model.sumNeuronN[0]+glbSpkPInh[i]);
-      }*/
+      }
       //end output_spikes
       
       //fprintf(osf, "%f ", t);
@@ -272,13 +272,13 @@ int main(int argc, char *argv[])
       PCNN.sum_spikes();
       //PCNN.output_spikes(osf2, which);
  
-      /*for (int i= 0; i < glbSpkCntPExc[0]; i++) {
+      for (int i= 0; i < glbSpkCntPExc[0]; i++) {
 		    fprintf(osf2,"%f %d\n", t, glbSpkPExc[i]);
       }
 
       for (int i= 0; i < glbSpkCntPInh[0]; i++) {
         fprintf(osf2, "%f %d\n", t, PCNN.model.sumNeuronN[0]+glbSpkPInh[i]);
-      }*/
+      }
       //end output_spikes
       //fprintf(osf, "%f ", t);
       //PCNN.write_input_to_file(osf2);
