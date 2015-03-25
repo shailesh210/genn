@@ -160,5 +160,5 @@ void modelDefinition(NNmodel &model)
   #endif 
     model.setSeed(1234);
     model.setPrecision(_FTYPE);
-    model.setTiming(TRUE);
+    model.setTiming(FALSE);
 }
