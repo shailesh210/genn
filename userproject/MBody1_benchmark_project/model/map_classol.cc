@@ -24,10 +24,6 @@
 #include "map_classol.h"
 #include "MBody1_CODE/runner.cc"
 
-#ifdef TIMING
-StopWatchInterface *timer_gen;
-#endif
-
 //--------------------------------------------------------------------------
 //--------------------------------------------------------------------------
 
@@ -309,7 +305,7 @@ void classol::read_input_patterns(FILE *f //!< File handle for a file containing
 	fprintf(stdout, "%f ", p_pattern[i]);
     }
     fprintf(stdout, "\n\n");
-    convertProbabilityToRandomNumberThreshold(p_pattern, pattern, model.neuronN[0]*PATTERNNO);
+    convertRateToRandomNumberThreshold(p_pattern, pattern, model.neuronN[0]*PATTERNNO);
     delete[] tmpp;
 }
 
@@ -322,7 +318,7 @@ void classol::generate_baserates()
 {
   // we use a predefined pattern number
     uint64_t inputBase;
-    convertProbabilityToRandomNumberThreshold(&InputBaseRate, &inputBase, 1);
+    convertRateToRandomNumberThreshold(&InputBaseRate, &inputBase, 1);
     for (int i= 0; i < model.neuronN[0]; i++) {
 	baserates[i]= inputBase;
     }

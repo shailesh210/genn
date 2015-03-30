@@ -357,4 +357,5 @@ void modelDefinition(NNmodel &model)
   #endif 
   model.setSeed(1234);
   model.setTiming(FALSE);
+  model.finalize();
 }

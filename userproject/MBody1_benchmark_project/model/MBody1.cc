@@ -158,7 +158,8 @@ void modelDefinition(NNmodel &model)
     cerr << "nGPU: " << nGPU << endl;
     model.setGPUDevice(nGPU);
   #endif 
-    model.setSeed(1234);
-    model.setPrecision(_FTYPE);
-    model.setTiming(FALSE);
+  model.setSeed(1234);
+  model.setPrecision(_FTYPE);
+  model.setTiming(FALSE);
+  model.finalize();
 }
