@@ -47,10 +47,7 @@ void genRunner(NNmodel &model, //!< Model description
     unsigned int mem = 0;
     float memremsparse= 0;
     ofstream os;
-    
-    //initializing learning parameters to start
-    model.initLearnGrps();  //Putting this here for the moment. Makes more sense to call it at the end of ModelDefinition, but this leaves the initialization to the user.
-    
+        
     string SCLR_MIN;
     string SCLR_MAX;
     if (model.ftype == tS("float")) {
@@ -103,6 +100,32 @@ void genRunner(NNmodel &model, //!< Model description
 	substitute(postSynModels[i].postSynDecay, "scalar", model.ftype);
     }
     
+    // generate definitions.h
+    // this file contains helpful macros and is separated out so that it can also be used by other code that is compiled separately
+    name= path + toString("/") + model.name + toString("_CODE/definitions.h");
+    os.open(name.c_str());  
+    writeHeader(os);
+    os << ENDL;
+    
+       // write doxygen comment
+    os << "//-------------------------------------------------------------------------" << ENDL;
+    os << "/*! \\file definitions.h" << ENDL << ENDL;
+    os << "\\brief File generated from GeNN for the model " << model.name << " containing useful Macros used for both GPU amd CPU versions." << ENDL;
+    os << "*/" << ENDL;
+    os << "//-------------------------------------------------------------------------" << ENDL << ENDL;
+    
+    for (int i= 0; i < model.neuronGrpN; i++) {
+	os << "#define glbSpkShift" << model.neuronName[i];
+	if (model.neuronDelaySlots[i] > 1) {
+	    os << " spkQuePtr" << model.neuronName[i] << "*" << model.neuronN[i];
+	}
+	else {
+	    os << " 0";
+	}
+	os << ENDL;
+    }
+    os.close();
+    
 //    cout << "entering genRunner" << endl;
     name= path + toString("/") + model.name + toString("_CODE/runner.cc");
     os.open(name.c_str());  
@@ -119,9 +142,14 @@ void genRunner(NNmodel &model, //!< Model description
     os << "#include <cstdio>" << ENDL;
     os << "#include <cassert>" << ENDL;
     os << "#include <stdint.h>" << ENDL;
+    os << "#include \"utils.h\"" << ENDL << ENDL;
     os << "#include \"numlib/simpleBit.h\"" << ENDL << ENDL;
     if (model.timing) os << "#include \"hr_time.cpp\"" << ENDL;
     os << ENDL;
+
+    os << "#ifndef int_" << ENDL;
+    os << "#define int_(X) ((int) (X))" << ENDL;
+    os << "#endif" << ENDL;
 
     os << "#ifndef scalar" << ENDL;
     os << "typedef " << model.ftype << " scalar;" << ENDL;
@@ -180,12 +208,35 @@ void genRunner(NNmodel &model, //!< Model description
     os << "    CHECK_CUDA_ERRORS(cudaMemcpy(devptr, hostPtr, sizeof(void*), cudaMemcpyHostToDevice));" << ENDL;
     os << "}" << ENDL << ENDL;
 
+    // write doxygen comment
+    os << "//-------------------------------------------------------------------------" << ENDL;
+    os << "/*! \\brief Function to convert a firing probability (per time step) " << ENDL;
+    os << "to an integer of type uint64_t that can be used as a threshold for the GeNN random number generator to generate events with the given probability." << ENDL;
+    os << "*/" << ENDL;
+    os << "//-------------------------------------------------------------------------" << ENDL << ENDL;
+
     os << "void convertProbabilityToRandomNumberThreshold(" << model.ftype << " *p_pattern, " << model.RNtype << " *pattern, int N)" << ENDL;
     os << "{" << ENDL;
-    os << "    " << model.ftype << " fac= pow(2.0, (int) sizeof(" << model.RNtype << ")*8-16)*DT;" << ENDL;
+    os << "    " << model.ftype << " fac= pow(2.0, (int) sizeof(" << model.RNtype << ")*8-16);" << ENDL;
     os << "    for (int i= 0; i < N; i++) {" << ENDL;
     //os << "        assert(p_pattern[i] <= 1.0);" << ENDL;
     os << "        pattern[i]= (" << model.RNtype << ") (p_pattern[i]*fac);" << ENDL;
+    os << "    }" << ENDL;
+    os << "}" << ENDL << ENDL;
+
+    // write doxygen comment
+    os << "//-------------------------------------------------------------------------" << ENDL;
+    os << "/*! \\brief Function to convert a firing rate (in kHz) " << ENDL;
+    os << "to an integer of type uint64_t that can be used as a threshold for the GeNN random number generator to generate events with the given rate." << ENDL;
+    os << "*/" << ENDL;
+    os << "//-------------------------------------------------------------------------" << ENDL << ENDL;
+
+    os << "void convertRateToRandomNumberThreshold(" << model.ftype << " *rateKHz_pattern, " << model.RNtype << " *pattern, int N)" << ENDL;
+    os << "{" << ENDL;
+    os << "    " << model.ftype << " fac= pow(2.0, (int) sizeof(" << model.RNtype << ")*8-16)*DT;" << ENDL;
+    os << "    for (int i= 0; i < N; i++) {" << ENDL;
+    //os << "        assert(rateKHz_pattern[i] <= 1.0);" << ENDL;
+    os << "        pattern[i]= (" << model.RNtype << ") (rateKHz_pattern[i]*fac);" << ENDL;
     os << "    }" << ENDL;
     os << "}" << ENDL << ENDL;
 
@@ -307,6 +358,7 @@ void genRunner(NNmodel &model, //!< Model description
     os << endl << endl;
 
 
+    os << "#include \"sparseUtils.cc\"" << ENDL << ENDL;
     // include simulation kernels
     os << "#include \"runnerGPU.cc\"" << endl << endl;
     os << "#include \"neuronFnct.cc\"" << endl;
@@ -468,6 +520,12 @@ void genRunner(NNmodel &model, //!< Model description
 
     // ------------------------------------------------------------------------
     // initializing variables
+    // write doxygen comment
+    os << "//-------------------------------------------------------------------------" << endl;
+    os << "/*! \\brief Function to (re)set all model variables to their compile-time, homogeneous initial values." << endl;
+    os << " Note that this typically includes synaptic weight values. The function (re)sets host side variables and copies them to the GPU device." << endl;
+    os << "*/" << endl;
+    os << "//-------------------------------------------------------------------------" << endl << endl;
 
     os << "void initialize()" << endl;
     os << "{" << endl;
@@ -487,6 +545,9 @@ void genRunner(NNmodel &model, //!< Model description
 
 	if (model.neuronDelaySlots[i] > 1) {
 	    os << "    spkQuePtr" << model.neuronName[i] << " = 0;" << endl;
+	    os << "CHECK_CUDA_ERRORS(cudaMemcpyToSymbol(dd_spkQuePtr" << model.neuronName[i];
+	    os << ", &spkQuePtr" << model.neuronName[i];
+	    os << ", " << "sizeof(unsigned int), 0, cudaMemcpyHostToDevice));" << endl;	
 	}
 
 	if ((model.neuronNeedTrueSpk[i]) && (model.neuronDelaySlots[i] > 1)) {
@@ -623,6 +684,22 @@ void genRunner(NNmodel &model, //!< Model description
 	    }
 	    os << "}" << endl; 
 	    os << endl;
+	    //setup up helper fn for this (specific) popn to generate sparse from dense 
+	    os << "void createSparseConnectivityFromDense" << model.synapseName[i] << "(int preN,int postN, " << model.ftype << " *denseMatrix)" << "{" << endl;
+	    os << "if (preN != " << model.neuronN[model.synapseSource[i]] << ") {" << endl;
+	    os << "    gennError(\"In createSparseConnectivityFromDense" << model.synapseName[i] << ": preN does not match the number of pre-synaptic neurons (" << model.neuronN[model.synapseSource[i]] << ").\");" << endl;
+	    os << "}" << endl;
+	    os << "if (postN != " << model.neuronN[model.synapseTarget[i]] << ") {" << endl;
+	    os << "    gennError(\"In createSparseConnectivityFromDense" << model.synapseName[i] << ": postN does not match the number of pre-synaptic neurons (" << model.neuronN[model.synapseTarget[i]] << ").\");" << endl;
+	    os << "}" << endl;
+	    
+	    os << "int connN = countEntriesAbove(denseMatrix, preN * postN, " << SCLR_MIN << ");" << endl;
+	    os << "allocate" << model.synapseName[i] << "(connN);" << endl;
+	    string wuvarName = "g" + tS(model.synapseName[i]);
+	    string sparseStructName = "C" + tS(model.synapseName[i]);
+	    os << "setSparseConnectivityFromDense(" << wuvarName << ",preN,postN,denseMatrix,&" << sparseStructName << ");" << endl;
+	    os << "}" << endl; 
+	    os << endl;
 	}
     }
 
@@ -714,6 +791,7 @@ void genRunner(NNmodel &model, //!< Model description
 	os << "    delete[] inSyn" << model.synapseName[i] << ";" << endl;
 	os << "    CHECK_CUDA_ERRORS(cudaFree(d_inSyn" << model.synapseName[i] << "));" << endl;
 	if (model.synapseConnType[i] == SPARSE) {
+	    os << "    C" << model.synapseName[i] << ".connN= 0;" << endl;
 	    os << "    delete[] C" << model.synapseName[i] << ".indInG;" << endl;
 	    os << "    delete[] C" << model.synapseName[i] << ".ind;" << endl;  
 	    if (model.synapseUsesPostLearning[i]) {
@@ -728,6 +806,7 @@ void genRunner(NNmodel &model, //!< Model description
 	}
 	if (model.synapseGType[i] == INDIVIDUALG) {
 	    for (int k= 0, l= weightUpdateModels[st].varNames.size(); k < l; k++) {
+		os << "    delete[] " << weightUpdateModels[st].varNames[k] << model.synapseName[i] << ";" << endl;
 		os << "    CHECK_CUDA_ERRORS(cudaFree(d_" << weightUpdateModels[st].varNames[k] << model.synapseName[i] << "));" << endl;
 	    }
 	    for (int k= 0, l= postSynModels[pst].varNames.size(); k < l; k++) {
@@ -1303,6 +1382,11 @@ void genRunnerGPU(NNmodel &model, //!< Model description
 	    }
 	    os << "t);" << endl;
 	    if (model.timing) os << "cudaEventRecord(learningStop);" << endl;
+	}
+	for (int i= 0; i < model.neuronGrpN; i++) { 
+	    if (model.neuronDelaySlots[i] > 1) {
+		os << "spkQuePtr" << model.neuronName[i] << " = (spkQuePtr" << model.neuronName[i] << " + 1) % " << model.neuronDelaySlots[i] << ";" << ENDL;
+	    }
 	}
 	os << "}" << endl;
     }

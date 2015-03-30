@@ -64,7 +64,18 @@
 void gennError(string error)
 {
   cerr << "GeNN error: " << error << endl;
-  exit(1);
+  exit(EXIT_FAILURE);
+}
+
+//--------------------------------------------------------------------------
+/*! \brief Function called upon the detection of an error. Outputs an error message and then exits.
+ */
+//--------------------------------------------------------------------------
+
+void gennError(const char *error)
+{
+  cerr << "GeNN error: " << error << endl;
+  exit(EXIT_FAILURE);
 }
 
 //--------------------------------------------------------------------------
@@ -494,9 +505,9 @@ void prepareStandardModels()
     $(V)+=0.5*(0.04*$(V)*$(V)+5.0*$(V)+140.0-$(U)+$(Isyn))*DT; //at two times for numerical stability\n\
     $(V)+=0.5*(0.04*$(V)*$(V)+5.0*$(V)+140.0-$(U)+$(Isyn))*DT;\n\
     $(U)+=$(a)*($(b)*$(V)-$(U))*DT;\n\
-   // if ($(V) > 30.0){   //keep this only for visualisation -- not really necessaary otherwise \n\
-    //  $(V)=30.0; \n\
-   //}\n\
+   if ($(V) > 30.0){   //keep this only for visualisation -- not really necessaary otherwise \n	\
+      $(V)=30.0; \n\
+   }\n\
    ");
     
   n.thresholdConditionCode = tS("$(V) >= 29.99");

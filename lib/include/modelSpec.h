@@ -67,7 +67,7 @@ unsigned int LEARN1SYNAPSE; //!< Variable attaching  the name LEARN1SYNAPSE to t
 #define GLOBALG 1 //!< Macro attaching the label "GLOBALG" to method 1 for the definition of synaptic conductances
 #define INDIVIDUALID 2 //!< Macro attaching the label "INDIVIDUALID" to method 2 for the definition of synaptic conductances
 
-#define NO_DELAY 1 //!< Macro used to indicate no synapse delay for the group (only one queue slot will be generated)
+#define NO_DELAY 0 //!< Macro used to indicate no synapse delay for the group (only one queue slot will be generated)
 
 #define NOLEARNING 0 //!< Macro attaching the label "NOLEARNING" to flag 0 
 #define LEARNING 1 //!< Macro attaching the label "LEARNING" to flag 1 
@@ -192,7 +192,7 @@ public:
   string name; //!< Name of the neuronal newtwork model
   string ftype; //!< Type of floating point variables (float, double, ...; default: float)
   string RNtype; //!< Underlying type for random number generation (default: long)
-  int valid; //!< Flag for whether the model has been validated (unused?)
+  int final; //!< Flag for whether the model has been finalized
   unsigned int needSt; //!< Whether last spike times are needed at all in this network model (related to STDP)
   unsigned int needSynapseDelay; //!< Whether delayed synapse conductance is required in the network
   int chooseGPUDevice;
@@ -349,6 +349,7 @@ public:
   void setSynapseClusterIndex(const string synapseGroup, int hostID, int deviceID); //!< Function for setting which host and which device a synapse group will be simulated on
 
   void initLearnGrps();
+  void finalize();
 };
 
 #endif

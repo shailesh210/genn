@@ -112,4 +112,5 @@ void modelDefinition(NNmodel &model)
     model.setGPUDevice(nGPU);
   #endif 
   model.setPrecision(_FTYPE);
+  model.finalize();
 }

@@ -62,11 +62,8 @@ double postExpOut[2] = {
 // INPUT-INTER, INPUT-OUTPUT & INTER-OUTPUT SYNAPSES
 //==================================================
 
-double synapses_p[3] = {
-  0.0,     // 0 - Erev: Reversal potential
-  -30.0,   // 1 - Epre: Presynaptic threshold potential
-  1.0      // 2 - tau_S: decay time constant for S [ms]
-};
+double *synapses_p= NULL;
+
 double inputInter_ini[1] = {
   0.06   // 0 - default synaptic conductance
 };
@@ -96,4 +93,5 @@ void modelDefinition(NNmodel &model)
   model.addSynapsePopulation("InputInter", NSYNAPSE, DENSE, GLOBALG, 3, IZHIKEVICH_PS, "Input", "Inter", inputInter_ini, synapses_p, postSynV, postExpInp);
   model.addSynapsePopulation("InputOutput", NSYNAPSE, DENSE, GLOBALG, 6, IZHIKEVICH_PS, "Input", "Output", inputOutput_ini, synapses_p, postSynV, postExpOut);
   model.addSynapsePopulation("InterOutput", NSYNAPSE, DENSE, GLOBALG, NO_DELAY, IZHIKEVICH_PS, "Inter", "Output", interOutput_ini, synapses_p, postSynV, postExpInt);
+  model.finalize();
 }
