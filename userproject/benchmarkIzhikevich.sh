@@ -23,6 +23,7 @@ ntimes=$2
 nNeuronsFirst=$3
 custommsg=$4
 GPUID=$5
+FP=FLOAT
 
 echo "running " ${ntimes} " times starting from " ${nNeuronsFirst}
 
@@ -43,10 +44,10 @@ do
   if [ -d "$BMPATH/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}" ]; then 
     echo "Dir exists. Copying files and running with the reference input..."
     cp -R $BMPATH/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}/* inputfiles/
-    ./generate_run ${GPUID} ${nTotal} 1000 1 ${OUTNAME} Izh_sparse 0 FLOAT 1
+    ./generate_run ${GPUID} ${nTotal} 1000 1 ${OUTNAME} Izh_sparse 0 ${FP} 1
   else
     echo "Running with new input files."
-    ./generate_run ${GPUID} ${nTotal} 1000 1 ${OUTNAME} Izh_sparse 0 FLOAT 0
+    ./generate_run ${GPUID} ${nTotal} 1000 1 ${OUTNAME} Izh_sparse 0 ${FP} 0
   fi
   
   #printf "\n #\n # copying \n #\n #\n"
