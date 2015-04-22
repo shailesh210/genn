@@ -116,12 +116,23 @@ if (which == GPU){
 //  float synwriteT= 0.0f;
 //  int synwrite= 0;
 //  unsigned int sum= 0;
-  while (!done) 
+    // ofstream dos("debug.dat");
+    // FILE *sos= fopen("debug.st","w"); 
+ while (!done) 
   {
     locust.getSpikeNumbersFromGPU();
     locust.getSpikesFromGPU();
+    // locust.output_spikes(sos,1);	
     locust.runGPU(DT); // run next batch
- 
+    // pullKCDNFromDevice();
+    // cerr << t << endl;
+    // dos << t << " ";
+    // for (int i= 0; i < 100; i++) {
+    //   dos << inSynKCDN[i] << " ";
+    // }
+    //  dos << endl;
+
+
     //pullDNStateFromDevice();
 
 
