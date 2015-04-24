@@ -24,7 +24,6 @@ scalar meanInpExc = 5.0; //5.0 for balanced regime
 scalar meanInpInh = 2.0; //2.0 for balanced regime
 
 double *excIzh_p = NULL;
-
 double *inhIzh_p = NULL;
 
 double IzhExc_ini[6]={
@@ -54,7 +53,7 @@ double *postExpP= NULL;
 double *postSynV = NULL;
 
 double SynIzh_ini[1]= {
-    0.0 // default synaptic conductance
+    0.0 // default initial synaptic conductance -- will be set up after model creation
 };
 
 void modelDefinition(NNmodel &model) 

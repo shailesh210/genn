@@ -150,12 +150,6 @@ void classIzh::write_input_to_file(FILE *f)
   fprintf(f,"\n");
 }
 
-/*void classIzh::read_input_values(FILE *f)
-{
-  fread(input1, model.neuronN[0]*sizeof(scalar),1,f);
-}*/
-
-
 void classIzh::create_input_values() //define your explicit input rule here
 {
     for (int x= 0; x < model.neuronN[0]; x++) {

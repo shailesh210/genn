@@ -23,7 +23,7 @@ ntimes=$2
 nNeuronsFirst=$3
 custommsg=$4
 GPUID=$5
-FP=FLOAT
+FP=DOUBLE
 
 echo "running " ${ntimes} " times starting from " ${nNeuronsFirst}
 
@@ -75,20 +75,20 @@ do
   cd ../MBody1_benchmark_project;
 
 
-  for dumbcntr in {1..2}
+  for dumbcntr in {1..4}
     do
       printf "\n\n***********************MBody1 GPU "${dumbcntr}" nMB = ${nMB} ****************************\n"
       printf "With ref setup... \n"  >> ${OUTNAME}_output/${OUTNAME}.time
       model/classol_sim ${OUTNAME} 1
       printf "\n\n***********************MBody1 CPU "${dumbcntr}" nMB = ${nMB} ****************************\n"
-      model/classol_sim ${OUTNAME} 0	
+      #model/classol_sim ${OUTNAME} 0	
     
       cd ../MBody_userdef_benchmark_project
       printf "\n\n***********************MBody_userdef GPU "${dumbcntr}" nMB = ${nMB} ****************************\n"
       printf "With ref setup... \n"  >> ${OUTNAME}_output/${OUTNAME}.time
       model/classol_sim ${OUTNAME} 1
       printf "\n\n***********************MBody_userdef CPU "${dumbcntr}"  nMB = ${nMB} ****************************\n"
-      model/classol_sim ${OUTNAME} 0	
+      #model/classol_sim ${OUTNAME} 0	
       cd ../MBody1_benchmark_project
   done
   echo "ntimes is" ${ntimes} " testt is " ${testt}

@@ -131,16 +131,12 @@ double postExpDNDN[2]={
 
 double * postSynV = NULL;
 
-double postSynV_EXPDECAY_EVAR[1] = {
-0
-};
 
 
   //define derived parameters for learn1synapse
   class pwSTDP_userdef : public dpclass  //!TODO This class definition may be code-generated in a future release
   {
     public:
-      //double calculateDerivedParameter(int index, vector <double> pars, double dt = DT) {
       double calculateDerivedParameter(int index, vector<double> pars, double dt = DT){		
 	  switch (index) {
 	  case 0:
@@ -162,31 +158,24 @@ double postSynV_EXPDECAY_EVAR[1] = {
       }
       
       double lim0(vector<double> pars, double dt) {
-	  //return 1.0f/$(TPUNISH01) + 1.0f/$(TCHNG) *$(TLRN) / (2.0f/$(TCHNG));
 	  return (1.0f/pars[5] + 1.0f/pars[2]) * pars[1] / (2.0f/pars[2]);
       }
       double lim1(vector<double> pars, double dt) {
-	  //return 1.0f/$(TPUNISH10) + 1.0f/$(TCHNG) *$(TLRN) / (2.0f/$(TCHNG));
 	  return -((1.0f/pars[4] + 1.0f/pars[2]) * pars[1] / (2.0f/pars[2]));
       }
       double slope0(vector<double> pars, double dt) {
-	  //return -2.0f*$(gmax)/ ($(TCHNG)*$(TLRN)); 
 	  return -2.0f*pars[6]/(pars[2]*pars[1]); 
       }
       double slope1(vector<double> pars, double dt) {
-	  //return -1*slope0(pars, dt);
 	  return -1*slope0(pars, dt);
       }
       double off0(vector<double> pars, double dt) {
-	  //return $(gmax)/$(TPUNISH01);
 	  return pars[6]/pars[5];
       }
       double off1(vector<double> pars, double dt) {
-	  //return $(gmax)/$(TCHNG);
 	  return pars[6]/pars[2];
       }
       double off2(vector<double> pars, double dt) {
-	  //return $(gmax)/$(TPUNISH10);
 			return pars[6]/pars[4];
       }
   };
@@ -209,26 +198,6 @@ void modelDefinition(NNmodel &model)
   // redefine nsynapse as a user-defined syapse type 
   model.setPrecision(_FTYPE);
 
-  postSynModel pstest;
-  pstest.varNames.clear();
-  pstest.varTypes.clear();
-
-  pstest.varNames.push_back(tS("EEEE")); 
-  pstest.varTypes.push_back(tS("scalar"));  
-
-  pstest.pNames.clear();
-  pstest.dpNames.clear(); 
-  
-  pstest.pNames.push_back(tS("tau")); 
-  pstest.dpNames.push_back(tS("expDecay"));
-
-  pstest.postSynDecay=tS(" 	 $(inSyn)*=$(expDecay);\n");
-  pstest.postSyntoCurrent=tS("$(inSyn)*($(EEEE)-$(V))");
-
-  pstest.dps = new expDecayDp;
-  
-  postSynModels.push_back(pstest);
-  unsigned int EXPDECAY_EVAR=postSynModels.size()-1; //this is the synapse index to be used in addSynapsePopulation*/
 
   /*END ADDING POSTSYNAPTIC METHODS*/
 
@@ -339,7 +308,7 @@ void modelDefinition(NNmodel &model)
   model.addNeuronPopulation("LHI", _NLHI, TRAUBMILES_PSTEP, stdTM_p, stdTM_ini);
   model.addNeuronPopulation("DN", _NLB, TRAUBMILES_PSTEP, stdTM_p, stdTM_ini);
   
-  model.addSynapsePopulation("PNKC", NSYNAPSE_userdef, SPARSE, INDIVIDUALG, NO_DELAY, EXPDECAY_EVAR, "PN", "KC", myPNKC_ini, myPNKC_p, postSynV_EXPDECAY_EVAR,postExpPNKC);
+  model.addSynapsePopulation("PNKC", NSYNAPSE_userdef, SPARSE, INDIVIDUALG, NO_DELAY, EXPDECAY, "PN", "KC", myPNKC_ini, myPNKC_p, postSynV,postExpPNKC);
   model.setMaxConn("PNKC", _NMB);  
 
   model.addSynapsePopulation("PNLHI", NSYNAPSE_userdef, ALLTOALL, INDIVIDUALG, NO_DELAY, EXPDECAY, "PN", "LHI", myPNLHI_ini, myPNLHI_p, postSynV, postExpPNLHI);
