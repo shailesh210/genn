@@ -50,12 +50,6 @@ do
     ./generate_run ${GPUID} ${nTotal} 1000 1 ${OUTNAME} Izh_sparse 0 ${FP} 0
   fi
   
-  #printf "\n #\n # copying \n #\n #\n"
-  #cp ${OUTNAME}_output/${OUTNAME}.kcdn* ../MBody_userdef_project/${OUTNAME}_output/ -R
-  #cp ${OUTNAME}_output/${OUTNAME}.pnkc* ../MBody_userdef_project/${OUTNAME}_output/ -R
-  #cp ${OUTNAME}_output/${OUTNAME}.pnlhi* ../MBody_userdef_project/${OUTNAME}_output/ -R
-  #cp ${OUTNAME}_output/${OUTNAME}.inpat* ../MBody_userdef_project/${OUTNAME}_output/ -R
-  
   #do the following only once
   if [ -d "$BMPATH/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}" ]; then 
     echo "Dir exists. not copying."
@@ -63,9 +57,6 @@ do
     echo "making directory and copying input files..."
     mkdir -p $BMPATH/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}
     cp -R inputfiles/* $BMPATH/Izhikevich_results/${OUTNAME}_output/inputfiles_${nTotal}/
-    #cp ${OUTNAME}_output/${OUTNAME}.pnkc* ~/benchmark/Izhikevich_results/${OUTNAME}_output/${nTotal}/ -R
-    #cp ${OUTNAME}_output/${OUTNAME}.pnlhi* ~/benchmark/Izhikevich_results/${OUTNAME}_output/${nTotal}/ -R
-    #cp ${OUTNAME}_output/${OUTNAME}.inpat* ~/benchmark/Izhikevich_results/${OUTNAME}_output/${nTotal}/ -R
   fi
 
 
@@ -83,7 +74,6 @@ do
 done
   cd ..
 
-  #cp Izh_sparse_project ~/benchmark/Izhikevich_results -R
   tail -n 15 Izh_sparse_project/${OUTNAME}_output/${OUTNAME}.time
  
   echo "Benchmarking complete!"
