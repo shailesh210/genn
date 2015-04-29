@@ -101,142 +101,55 @@ int main(int argc, char *argv[])
   int done= 0;
   float last_t_report=  t;
   timer.startTimer();
-//  int spkcntr = 0;
   
   if (which == GPU){   
-    locust.runGPU(DT);
-    //float synwriteT= 0.0f;
-    //float lastsynwrite= 0.0f;
-    //int synwrite= 0;
     while (!done) 
     {    
+      locust.runGPU(DT); // run next batch
       locust.getSpikeNumbersFromGPU();
       locust.getSpikesFromGPU();
-      locust.runGPU(DT); // run next batch
     
       locust.sum_spikes();
       locust.output_spikes(osf2, which);
-
- /*     if ((glbSpkCntDN[0] > 0) && ((t < 500) || (t > TOTAL_TME - 1000))){
-        pullKCDNFromDevice();
-        fprintf(out_insyn,"t=%f ", t);
-        if (spkcntr%10 == 0){
-          fprintf(stdout,"OK! spkcntr = %d", spkcntr );
-          for (int i_kc = 0; i_kc < locust.model.neuronN[1]; i_kc++){ //
-            //fprintf(out_g,"t=%f,i_kc=%d ", t, i_kc);
-            for (int i_dn = 0; i_dn < locust.model.neuronN[3]; i_dn++){
-              fprintf(out_g,"%f ", gKCDN[i_kc*locust.model.neuronN[3]+i_dn]);
-            }
-          }
-        fprintf(out_g,"\n"); 
-        }
-        for (int i_dn = 0; i_dn < locust.model.neuronN[3]; i_dn++){
-          fprintf(out_insyn,"%f ", inSynKCDN[i_dn]);
-        }
-        
-        fprintf(out_insyn,"\n");
-        
-        fprintf(stdout,"%d: %d DN spikes detected at t=%f conductance and insyn written in file \n", spkcntr, glbSpkCntDN[0], t);
-        spkcntr++;
+/*      pullDNStateFromDevice();
+      fprintf(osf,"%.9g ", t);
+      for (int i_dn = 0; i_dn < locust.model.neuronN[3]; i_dn++){
+         fprintf(osf,"%.9g ", VDN[i_dn]);
       }
-	pullDNStateFromDevice();
-  fprintf(osf, "%f ", t);
-  for (int i= 0; i < 100; i++) {
-    fprintf(osf, "%f ", VDN[i]);
-  }
-  fprintf(osf,"\n");
+      fprintf(osf,"\n");
 */
-    // report progress
-    if (t - last_t_report >= T_REPORT_TME)
-    {
-      fprintf(stdout, "time %f \n", t);
-      last_t_report= t;
+      // report progress
+      if (t - last_t_report >= T_REPORT_TME)
+      {
+        fprintf(stdout, "time %f \n", t);
+        last_t_report= t;
+      }
+      // output synapses occasionally
+      done= (t >= TOTAL_TME);
     }
-    // output synapses occasionally
-    /*if (synwrite) {
-       lastsynwrite= synwriteT;
-       name= OutDir+ "/"+ tS(argv[1]) + tS(".") + tS((int) synwriteT) + tS(".syn"); 
-       f= fopen(name.c_str(),"w");
-       locust.write_kcdnsyns(f);
-       fclose(f);
-       synwrite= 0;
-    }
-    if (t - lastsynwrite >= SYN_OUT_TME) {
-       locust.get_kcdnsyns();
-       synwrite= 1;
-       synwriteT= t;
-    }*/
-    done= (t >= TOTAL_TME);
   }
-}
   
   if (which == CPU){   
-    locust.runCPU(DT);
-    //float synwriteT= 0.0f;
-    //float lastsynwrite= 0.0f;
-    //int synwrite= 0;
     while (!done) 
     {
-
       locust.runCPU(DT); // run next batch
-    // if (which == GPU) {  
-//	pullDNStateFromDevice();
-    //   }
-
-
       locust.sum_spikes();
       locust.output_spikes(osf2, which);
-      
- /*     if ((glbSpkCntDN[0] > 0) && ((t < 500) || (t > TOTAL_TME - 1000))){
-        fprintf(out_insyn,"t=%f ", t);
-        if (spkcntr%10 == 0){
-          fprintf(stdout,"OK! spkcntr = %d", spkcntr );
-          for (int i_kc = 0; i_kc < locust.model.neuronN[1]; i_kc++){ //
-            //fprintf(out_g,"t=%f,i_kc=%d ", t, i_kc);
-            for (int i_dn = 0; i_dn < locust.model.neuronN[3]; i_dn++){
-              fprintf(out_g,"%f ", gKCDN[i_kc*locust.model.neuronN[3]+i_dn]);
-            }
-          }
-        fprintf(out_g,"\n"); 
-        }
-        for (int i_dn = 0; i_dn < locust.model.neuronN[3]; i_dn++){
-          fprintf(out_insyn,"%f ", inSynKCDN[i_dn]);
-        }
-        
-        fprintf(out_insyn,"\n");
-        
-        fprintf(stdout,"%d: %d DN spikes detected at t=%f conductance and insyn written in file \n", spkcntr, glbSpkCntDN[0], t);
-        spkcntr++;
+  /*    fprintf(osf,"%.9g ", t);
+      for (int i_dn = 0; i_dn < locust.model.neuronN[3]; i_dn++){
+         fprintf(osf,"%.9g ", VDN[i_dn]);
       }
- /*   fprintf(osf, "%f ", t);
-    //  for (int i= 0; i < 100; i++) {
-    //     fprintf(osf, "%f ", VDN[i]);
-    //   }
-    // fprintf(osf,"\n");
+      fprintf(osf,"\n");
 */
-    // report progress
-    if (t - last_t_report >= T_REPORT_TME)
-    {
-      fprintf(stdout, "time %f \n", t);
-      last_t_report= t;
+      // report progress
+      if (t - last_t_report >= T_REPORT_TME)
+      {
+        fprintf(stdout, "time %f \n", t);
+        last_t_report= t;
+      }
+      done= (t >= TOTAL_TME);
     }
-    // output synapses occasionally
-    /*if (synwrite) {
-       lastsynwrite= synwriteT;
-       name= OutDir+ "/"+ tS(argv[1]) + tS(".") + tS((int) synwriteT) + tS(".syn"); 
-       f= fopen(name.c_str(),"w");
-       locust.write_kcdnsyns(f);
-       fclose(f);
-       synwrite= 0;
-    }
-    if (t - lastsynwrite >= SYN_OUT_TME) {
-       locust.get_kcdnsyns();
-       synwrite= 1;
-       synwriteT= t;
-    }*/
-    done= (t >= TOTAL_TME);
   }
-}
   timer.stopTimer();
   if (which == GPU) pullDNStateFromDevice();
   cerr << "output files are created under the current directory." << endl;
@@ -244,8 +157,6 @@ int main(int argc, char *argv[])
 fprintf(stdout, "GPU=%d, %u neurons, %u PN spikes, %u KC spikes, %u LHI spikes, %u DN spikes, simulation took %.4f secs, VDN[0]=%.2f DT=%.1f %.2f\n",which, locust.model.sumNeuronN[locust.model.neuronGrpN-1], locust.sumPN, locust.sumKC, locust.sumLHI, locust.sumDN, timer.getElapsedTime(),VDN[0], TOTAL_TME, DT);
   fclose(osf);
   fclose(osf2);
-//  fclose(out_g);
- // fclose(out_insyn);
   fclose(timef);
 
   if (which == GPU) {
