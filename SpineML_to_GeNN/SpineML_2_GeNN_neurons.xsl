@@ -46,7 +46,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:SMLLOWNL="http://www.shef
   <!-- Sanity - is the neuron type compatible with GeNN?? -->
   <xsl:if test="not(count(//SMLCL:EventSendPort)=1)">
   	  <xsl:message terminate="no">
-Error: Trying to add a neuron with more than one event send port - which really just won't work in GeNN
+Error: Trying to add a neuron with more (or less) than one event send port - which really just won't work in GeNN
 (basically I'm flagging this because you don't have just one EventSendPort)
 	</xsl:message>
   </xsl:if>

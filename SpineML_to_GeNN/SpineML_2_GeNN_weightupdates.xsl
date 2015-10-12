@@ -49,6 +49,8 @@ Error: WeightUpdates cannot contain TimeDerivatives
   // Add new weightupdate type - <xsl:value-of select="//SMLCL:ComponentClass/@name"/>: 
   wu.varNames.clear();
   wu.varTypes.clear();
+  wu.varNames.push_back(tS("g"));
+  wu.varTypes.push_back(tS("float"));
   <xsl:for-each select="//SMLCL:StateVariable | //SMLCL:Parameter">
   	<xsl:variable name="curr_par_name" select="@name"/>
   	<xsl:variable name="curr_par_type" select="local-name(.) = 'Parameter'"/>
