@@ -222,7 +222,7 @@ Error: Explicit list of parameter values for '<xsl:value-of select="$curr_par_na
 
 		<!-- ### STATE VARIABLES FOR WU ### -->
 		<!-- ADD ARRAY WITH NAME AND SIZE DERIVED FROM COMPONENT -->
-		<!---->double ini__<xsl:value-of select="concat('WeightUpdate',position())"/>[<!-- EMPTY BRACKETS AS C++ DOES NOT REQUIRE A NUMBER -->]={
+		<!---->double ini__<xsl:value-of select="concat('WeightUpdate',position())"/>[<!-- EMPTY BRACKETS AS C++ DOES NOT REQUIRE A NUMBER -->]={0,
 		<xsl:for-each select="document(SMLLOWNL:WeightUpdate/@url)//SMLCL:StateVariable | document(SMLLOWNL:WeightUpdate/@url)//SMLCL:Parameter"> <!-- ENTER CURRENT POPULATION COMPONENT STATE VARIABLE -->
 				<xsl:message terminate="no">
 Warning: State variable in Synapses are not currently supported by GeNN
@@ -362,12 +362,12 @@ Error: Explicit list of state variable values used for '<xsl:value-of select="$c
 	<!-- WRITE OUT THE MODEL SETUP FUNCTION -->
 	<!---->void modelDefinition(NNmodel &amp;model) 
 <!---->{
-	GeNNReady = 1;	
 	#include "extra_neurons.h"
 	#include "extra_postsynapses.h"
 	#include "extra_weightupdates.h"
 	POISSONNEURON = INT_MAX;
 		
+	initGeNN();
 <!---->	model.setGPUDevice(0); 
 <!---->	model.setName("<xsl:value-of select="translate(/SMLLOWNL:SpineML/@name,' ','_')"/>");<!---->
 	<!-- ADD POPULATIONS -->
@@ -464,6 +464,7 @@ Error: A WeightUpdate component is lacking a value 'g', which is required for Ge
 <!---->
 <!---->
 	model.setPrecision(0);
+	model.finalize();
 }
 	
 </xsl:when>

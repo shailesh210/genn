@@ -672,6 +672,56 @@ Error: Native Poisson parameter 'therate' not found or undefined
        		<!---->rates<xsl:value-of select="translate(@name,' -','SH')"/>,offset,<!---->
        	</xsl:for-each>
        	<!----> t);
+
+	// Logging...
+       
+       <xsl:for-each select="$experiment_file//SMLEX:LogOutput">
+       <xsl:variable name="target" select="@target"/>
+       
+       <!-- Create the variable for the log temp file name -->
+       <xsl:variable name="logName"><xsl:value-of select="translate(@target,' ','_')"/>_<xsl:value-of select="@port"/>_log</xsl:variable>
+       
+       <xsl:variable name="host_var_name">
+       <xsl:value-of select="@port"/><!---->
+       <xsl:if test="count($model_file//SMLLOWNL:Neuron[@name=$target])=1">_NB</xsl:if>
+       <xsl:if test="count($model_file//SMLLOWNL:WeightUpdate[@name=$target])=1">_WU</xsl:if>
+       <xsl:if test="count($model_file//SMLLOWNL:PostSynapse[@name=$target])=1">_PS</xsl:if>
+       <xsl:value-of select="translate(@target,' -','SH')"/>
+       </xsl:variable>
+       
+       <xsl:variable name="var_size">
+    		<xsl:for-each select="$model_file//SMLLOWNL:Neuron[@name=$target]"><xsl:value-of select="@size"/></xsl:for-each>
+       		<xsl:for-each select="$model_file//SMLLOWNL:WeightUpdate[@name=$target]">1</xsl:for-each>
+       		<xsl:for-each select="$model_file//SMLLOWNL:PostSynapse[@name=$target]"><xsl:variable name="dst" select="../../@dst_population"/><xsl:value-of select="//SMLLOWNL:Neuron[@name=$dst]/@size"/></xsl:for-each>       
+       </xsl:variable>
+       
+        <xsl:if test="@indices">
+		// Collate the selected values into the temporary variable
+       <xsl:value-of select="$logName"/>TEMP.clear();
+		for (unsigned int ind = 0; ind &lt; <xsl:value-of select="$logName"/>INDS.size(); ++ind) {
+			// place each index into the temp array
+			<xsl:value-of select="$logName"/>TEMP.push_back(<xsl:value-of select="$host_var_name"/>[<xsl:value-of select="$logName"/>INDS[ind]]);
+		}
+		// write to disk
+		fwrite(&amp;(<xsl:value-of select="$logName"/>TEMP[0]), sizeof(float),<xsl:value-of select="$logName"/>TEMP.size(),<xsl:value-of select="$logName"/>FILE);
+ 		</xsl:if>
+ 		<xsl:if test="not(@indices)">
+ 		// write all to disk
+		fwrite(<xsl:value-of select="$host_var_name"/>, sizeof(float),<xsl:value-of select="$var_size"/>,<xsl:value-of select="$logName"/>FILE);			
+ 		</xsl:if>
+       
+       </xsl:for-each>
+
+      	// write out time to the GUI and check for the stop command
+      	if (time_file) {
+			// rewind the file and print the time
+			fseek(time_file,0,SEEK_SET);
+			fprintf(time_file, "%f", t);
+		}
+		
+		FILE * stop_file = fopen("<xsl:value-of select="$model_dir"/>/stop.txt","r");
+ 		if (stop_file) break;
+      
 	}
     t+= DT;
     //fprintf(stderr, "# one time step complete ... \n\n");

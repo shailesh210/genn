@@ -240,10 +240,10 @@ void modelDefinition(NNmodel &model)
   nsynapse.varTypes.clear();
   nsynapse.pNames.clear();
   nsynapse.dpNames.clear();
-  nsynapse.varNames.push_back(tS("g"));
+  nsynapse.varNames.push_back(tS("w"));
   nsynapse.varTypes.push_back(tS("scalar"));
   // code for presynaptic spike:
-  nsynapse.simCode = tS("$(addtoinSyn) = $(g);\n\
+  nsynapse.simCode = tS("$(addtoinSyn) = $(w);\n\
   $(updatelinsyn);\n\
   ");
   weightUpdateModels.push_back(nsynapse);
