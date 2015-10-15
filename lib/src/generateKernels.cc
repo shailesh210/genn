@@ -539,21 +539,7 @@ void generate_process_presynaptic_events_code(
 
 	// Detect spike events or spikes and do the update
 	if ((sparse) && switchTypeOfSparse) {
-	int maxConnections;
-	if ((sparse) && (isGrpVarNeeded[model.synapseTarget[i]])) {
-	    if (model.maxConn[i] < 1) {
-		fprintf(stderr, "Model Generation warning: for every SPARSE synapse group used you must also supply (in your model)\
- a max possible number of connections via the model.setMaxConn() function.");
-		maxConnections = model.neuronN[trg];
-	    }
-	    else {
-		maxConnections = model.maxConn[i];
-	    }
-	}
-	else {
-	    maxConnections = model.neuronN[trg];
-	}
-	os << "if (" << localID << " < " << maxConnections << ") {" << ENDL;
+	os << "if (" << localID << " < lscnt" << ") {" << ENDL;
 	os << "int preInd = dd_glbSpk"  << postfix << model.neuronName[src] << "[" << localID << "];" << ENDL;
 	os << "prePos = dd_indInG" << model.synapseName[i] << "[preInd];" << ENDL;
 	os << "npost = dd_indInG" << model.synapseName[i] << "[preInd + 1] - prePos;" << ENDL;
