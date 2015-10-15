@@ -23,6 +23,37 @@ bool switchTypeOfSparse = true;
 <!-- LOW LEVEL SCHEMA -->
 <xsl:when test="SMLLOWNL:SpineML">
 
+	<!-- INITIAL SANITY CHECKING -->
+	<!-- IF WE HAVE A NATIVE WEIGHT UPDATE WE MUST HAVE A NATIVE POSTSYNAPSE TYPE -->
+	<!--xsl:for-each select="//SMLLOWNL:Synapse">
+		<xsl:if test="document(SMLLOWNL:WeightUpdate/@url)/SMLCL:SpineML/SMLCL:ComponentClass[@name = 'GeNNNativeSynapse']">
+			<xsl:if test="not(document(SMLLOWNL:PostSynapse/@url)/SMLCL:SpineML/SMLCL:ComponentClass[@name = 'GeNNNativePostSynapse'])">
+				<xsl:message terminate="yes">
+Error: Mismatch of Native WeightUpdate and PostSynapse types
+				</xsl:message>
+			</xsl:if>
+		</xsl:if>
+		<xsl:if test="document(SMLLOWNL:WeightUpdate/@url)/SMLCL:SpineML/SMLCL:ComponentClass[@name = 'GeNNNativeGradedSynapse']">
+			<xsl:if test="not(document(SMLLOWNL:PostSynapse/@url)/SMLCL:SpineML/SMLCL:ComponentClass[@name = 'GeNNNativeGradedPostSynapse'])">
+				<xsl:message terminate="yes">
+Error: Mismatch of Native WeightUpdate and PostSynapse types
+				</xsl:message>
+			</xsl:if>
+		</xsl:if>		
+		<xsl:if test="document(SMLLOWNL:WeightUpdate/@url)/SMLCL:SpineML/SMLCL:ComponentClass[@name = 'GeNNNativeLearningSynapse']">
+			<xsl:if test="not(document(SMLLOWNL:PostSynapse/@url)/SMLCL:SpineML/SMLCL:ComponentClass[@name = 'GeNNNativeLearningPostSynapse'])">
+				<xsl:message terminate="yes">
+Error: Mismatch of Native WeightUpdate and PostSynapse types
+				</xsl:message>
+			</xsl:if>
+		</xsl:if>	
+	</xsl:for-each-->
+	<!-- NO GENERIC INPUTS -->
+	<!--xsl:if test="count(//SMLLOWNL:Input)>0">
+		<xsl:message terminate="no">
+Error: Low level API not supported - Generic Inputs are not supported by GeNN
+		</xsl:message>
+	</xsl:if -->
 	<!-- NO GROUPS -->
 	<xsl:if test="count(//SMLLOWNL:Group)>0">
 		<xsl:message terminate="yes">
@@ -375,6 +406,12 @@ Error: Explicit list of state variable values used for '<xsl:value-of select="$c
 				</xsl:choose>
 			</xsl:otherwise>
 		</xsl:choose>
+		<!-- FOR NOW WE'LL DETECT G AS A PARAMETER SEPERATE FROM THE OTHERS... THIS IS NOT NEEDED ANYMORE -->
+		<!--xsl:if test="not(SMLLOWNL:WeightUpdate/SMLNL:Property[@name='g'])">
+			<xsl:message terminate="yes">
+Error: A WeightUpdate component is lacking a value 'g', which is required for GeNN currently... 
+			</xsl:message>
+		</xsl:if-->
 		<!-- Since custom weight updates have been introduced we now always use GLOBAL G as we handle our own G values -->
 		<!---->INDIVIDUALG, <!---->
 		<!-- NOW HANDLE THE GLOBAL DELAY - FOR NOW WE'LL HARD CODE IT BUT SHOULD DETECT AND FILL THIS IN -->
@@ -393,17 +430,27 @@ Error: Explicit list of state variable values used for '<xsl:value-of select="$c
 		<!-- PARAMETERS FOR POSTSYNAPSE -->
 		<!---->p__<xsl:value-of select="concat('PostSynapse',position())"/>
 		<!---->);<!---->
-		<!-- For sparse connectivity we need to set the maximum number of connections PER PRESYNAPTIC NEURON -->
+		<!-- ADD GLOBAL G VALUES -->
+		<xsl:if test="SMLLOWNL:WeightUpdate/SMLNL:Property[@name='g']/SMLNL:FixedValue">
+	//model.setSynapseG("<xsl:value-of select="concat('Synapse',position())"/>_<xsl:value-of select="translate(../../SMLLOWNL:Neuron/@name,' -','SH')"/>_to_<xsl:value-of select="translate(../@dst_population,' -','SH')"/>",<!---->
+<!---->	<xsl:value-of select="SMLLOWNL:WeightUpdate/SMLNL:Property[@name='g']/SMLNL:FixedValue/@value"/>);<!---->
+		</xsl:if>
+		<!-- We always have a global 'g', just sometimes we do not use it -->
+		<xsl:if test="not(SMLLOWNL:WeightUpdate/SMLNL:Property[@name='g']/SMLNL:FixedValue)">
+	//model.setSynapseG("<xsl:value-of select="concat('Synapse',position())"/>_<xsl:value-of select="translate(../../SMLLOWNL:Neuron/@name,' -','SH')"/>_to_<xsl:value-of select="translate(../@dst_population,' -','SH')"/>",<!---->
+<!---->	0);<!---->
+		</xsl:if>
+		<!-- For sparse connectivity we need to set the maximum number of connections... -->
 		<xsl:variable name="dstPop" select="../@dst_population"/>
 		<xsl:variable name="maxConnSize" select="number(//SMLLOWNL:Neuron[@name=$dstPop]/@size)*number(../../SMLLOWNL:Neuron/@size)"/>
 		<xsl:if test="count(SMLNL:AllToAllConnection | SMLNL:OneToOneConnectivity) = 0">
 			<xsl:if test="not(number(SMLNL:FixedProbabilityConnection/@probability)>number(0.1) or (count(.//SMLNL:Connection) div number($maxConnSize))>number(0.1) or (number(.//@num_connections) div number($maxConnSize))>number(0.1))">
 		model.setMaxConn("<xsl:value-of select="concat('Synapse',position())"/>_<xsl:value-of select="translate(../../SMLLOWNL:Neuron/@name,' -','SH')"/>_to_<xsl:value-of select="translate(../@dst_population,' -','SH')"/>", <!---->
 		<xsl:if test="SMLNL:OneToOneConnection">
-			<!---->1<!----><!--xsl:value-of select="../../SMLLOWNL:Neuron/@size"/--><!-- size of src nrn -->
+			<xsl:value-of select="../../SMLLOWNL:Neuron/@size"/><!-- size of src nrn -->
 		</xsl:if>
 		<xsl:if test="SMLNL:FixedProbabilityConnection">
-			<xsl:value-of select="number(.//@probability) * (//SMLLOWNL:Neuron[@name=$dstPop]/@size) * number(2.5)"/><!-- 2.5 is pretty safe I've found -->
+			<xsl:value-of select="number(.//@probability) * number($maxConnSize) * number(2.5)"/><!-- 2.5 is pretty safe I've found -->
 		</xsl:if>
 		<xsl:if test="count(.//SMLNL:Connection) > 0">
 			<xsl:value-of select="count(.//SMLNL:Connection)"/>
