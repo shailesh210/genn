@@ -94,6 +94,11 @@ Error: Trying to add a neuron type without an input 'Isyn'. At the moment this w
   	 <xsl:for-each select="$expt_root//SMLEX:TimeVaryingInput[@target=$curr_nb/@name]">
   	 	<!-- We know the input port is declared, so we can quickly update the values -->
   	 	<xsl:for-each select="SMLEX:TimePointValue">
+			<!-- list in reverse order... -->
+			<xsl:sort select="position()" data-type="number" order="descending"/>
+			<xsl:if test="not(position()=1)">
+<!---->			<!---->else <!---->		
+			</xsl:if>
   	 		<!---->if (t > <xsl:value-of select="@time"/>) { \n \
 <!----> <!----><xsl:value-of select="../@port"/>_NB += <xsl:value-of select="@value"/>; \n \
 <!----> <!---->} \n \
