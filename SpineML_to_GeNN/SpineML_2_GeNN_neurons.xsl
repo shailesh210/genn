@@ -52,12 +52,12 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:SMLLOWNL="http://www.shef
 		<xsl:otherwise>
   <!-- UNRECOGNISED NEURON TYPE - GENERATE GeNN CLASS -->
   <!-- Sanity - is the neuron type compatible with GeNN?? -->
-  <xsl:if test="not(count(//SMLCL:EventSendPort)=1)">
+  <!--xsl:if test="not(count(//SMLCL:EventSendPort)=1)">
   	  <xsl:message terminate="no">
 Error: Trying to add a neuron with more (or less) than one event send port - which really just won't work in GeNN
 (basically I'm flagging this because you don't have just one EventSendPort)
 	</xsl:message>
-  </xsl:if>
+  </xsl:if-->
 			
   // Add new neuron type - <xsl:value-of select="//SMLCL:ComponentClass/@name"/>: 
   n.varNames.clear();

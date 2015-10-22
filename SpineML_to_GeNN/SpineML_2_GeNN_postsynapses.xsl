@@ -32,11 +32,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:SMLLOWNL="http://www.shef
 Error: PostSynapses with EventPorts are not supported by GeNN
 	</xsl:message>
   </xsl:if>
-  <xsl:if test="not(count(//SMLCL:ImpulseReceivePort[@name=$curr_ps/@input_dst_port])=1) and count(//SMLCL:ImpulseReceivePort)=1">
-  	  <xsl:message terminate="no">
-Error: PostSynapses must have one ImpulsePort
-	</xsl:message>
-  </xsl:if>
+
 			
   // Add new postsynapse type - <xsl:value-of select="//SMLCL:ComponentClass/@name"/>: 
   ps.varNames.clear();

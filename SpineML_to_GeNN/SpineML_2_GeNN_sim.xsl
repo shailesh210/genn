@@ -410,7 +410,7 @@ CHECK_CUDA_ERRORS(cudaMalloc((void **)&amp;tmpd_randomNormal<xsl:value-of select
     		<xsl:variable name="popName" select="@name"/>
     		<xsl:variable name="popSize" select="@size"/>
     		<xsl:for-each select="document(@url)//SMLCL:MathInline">
-  				<xsl:if test="contains(.,'randomNormal')">
+  				<xsl:if test="contains(.,'randomUniform')">
   				for (int i = 0; i &lt; <xsl:value-of select="$popSize"/>; ++i) {
 			<!---->randomUniform<xsl:value-of select="translate($popName,' -','SH')"/>[i]=uniformRand(0.0,1.0);
 			<!---->}

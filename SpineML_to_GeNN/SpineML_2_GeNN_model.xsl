@@ -187,7 +187,7 @@ Error: Explicit list of state variable values used for '<xsl:value-of select="$c
 					<!-- NOT CURRENTLY SUPPORTED--> // <xsl:value-of select="position()-1"/> - <xsl:value-of select="$curr_par_name"/>
 					<xsl:text>
 		</xsl:text>
-					<xsl:message terminate="no">
+					<xsl:message terminate="yes">
 Error: Random parameter value for '<xsl:value-of select="$curr_par_name"/>' used in model - this is not supported by GeNN
 					</xsl:message>
 				</xsl:when>
@@ -196,7 +196,7 @@ Error: Random parameter value for '<xsl:value-of select="$curr_par_name"/>' used
 					<!-- NOT CURRENTLY SUPPORTED --> // <xsl:value-of select="position()-1"/> - <xsl:value-of select="$curr_par_name"/>
 					<xsl:text>
 		</xsl:text>
-					<xsl:message terminate="no">
+					<xsl:message terminate="yes">
 Error: Explicit list of parameter values for '<xsl:value-of select="$curr_par_name"/>' used in model - this is not supported by GeNN
 					</xsl:message>
 				</xsl:when>
@@ -215,9 +215,7 @@ Error: Explicit list of parameter values for '<xsl:value-of select="$curr_par_na
 		<!-- ADD ARRAY WITH NAME AND SIZE DERIVED FROM COMPONENT -->
 		<!---->double ini__<xsl:value-of select="concat('WeightUpdate',position())"/>[<!-- EMPTY BRACKETS AS C++ DOES NOT REQUIRE A NUMBER -->]={0,
 		<xsl:for-each select="document(SMLLOWNL:WeightUpdate/@url)//SMLCL:StateVariable | document(SMLLOWNL:WeightUpdate/@url)//SMLCL:Parameter"> <!-- ENTER CURRENT POPULATION COMPONENT STATE VARIABLE -->
-				<xsl:message terminate="no">
-Warning: State variable in Synapses are not currently supported by GeNN
-				</xsl:message>		
+	
 			<xsl:variable name="curr_par_name" select="@name"/>
 			<xsl:variable name="curr_par_type" select="local-name(.) = 'Parameter'"/>
 			<xsl:choose>
@@ -232,18 +230,12 @@ Warning: State variable in Synapses are not currently supported by GeNN
 					<!-- NOT CURRENTLY SUPPORTED--> // <xsl:value-of select="position()-1"/> - <xsl:value-of select="$curr_par_name"/>
 					<xsl:text>
 		</xsl:text>
-					<xsl:message terminate="no">
-Error: Random state variable value for '<xsl:value-of select="$curr_par_name"/>' used in model - this is not currently supported by GeNN
-					</xsl:message>
 				</xsl:when>
 				<!-- IF THERE EXISTS A PROPERTY LIST FOR THIS STATE VARIABLES -->
 				<xsl:when test="$curr_props[@name=$curr_par_name]/SMLNL:ValueList">
 					<!-- NOT CURRENTLY SUPPORTED --> // <xsl:value-of select="position()-1"/> - <xsl:value-of select="$curr_par_name"/>
 					<xsl:text>
 		</xsl:text>
-					<xsl:message terminate="no">
-Error: Explicit list of state variable values used for '<xsl:value-of select="$curr_par_name"/>' in model - this is not currently supported by GeNN
-					</xsl:message>
 				</xsl:when>
 				<!-- IF NO PROPERTY FOR THIS STATE VARIABLES -->
 				<xsl:when test="not($curr_par_type)">
