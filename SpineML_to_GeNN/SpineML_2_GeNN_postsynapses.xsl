@@ -175,6 +175,30 @@ Error: Connections to PostSynapses from sources other than the destination Neuro
 	</xsl:for-each>
 </xsl:for-each>
 
+<!-- GENERIC INPUTS BETWEEN NEURONS -->	
+<xsl:for-each select="/SMLLOWNL:SpineML/SMLLOWNL:Population/SMLLOWNL:Neuron/SMLLOWNL:Input[@src=//SMLLOWNL:Neuron/@name]">
+
+  // Add new weightupdate type - <xsl:value-of select="//SMLCL:ComponentClass/@name"/>: 
+  ps.varNames.clear();
+  ps.varTypes.clear();
+  ps.pNames.clear();
+  
+  ps.postSyntoCurrent = tS(" \
+  0; \n \
+     	<!--xsl:if test="count(//SMLLOWNL:Synapse)=0 and position()=0">float </xsl:if-->
+     	<!---->float I_sum_NB = 0; \n \
+     	I_sum_NB += $(inSyn); \n \
+");
+  	 
+	ps.postSynDecay = tS(" \
+  	 	$(inSyn) = 0; \
+  	");
+
+  postSynModels.push_back(ps);
+<!---->
+
+</xsl:for-each>
+
 </xsl:when>
 
 <!-- HIGH LEVEL SCHEMA -->

@@ -25,21 +25,6 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:SMLLOWNL="http://www.shef
 	<xsl:for-each select="document(@url)">
   <!-- UNRECOGNISED WEIGHTUPDATE TYPE - GENERATE GeNN CLASS -->
   <!-- Sanity - is the weight update type compatible with GeNN?? -->
-  <xsl:if test="not(count(//SMLCL:AnalogSendPort)=0)">
-  	  <xsl:message terminate="no">
-Error: WeightUpdates with AnalogSendPorts are not supported by GeNN
-	</xsl:message>
-  </xsl:if>
-  <!--xsl:if test="not(count(//SMLCL:ImpulseSendPort[@name=$curr_wu/@input_dst_port])=1) and count(//SMLCL:ImpulseSendPort)=1">
-  	  <xsl:message terminate="yes">
-Error: WeightUpdates must have one ImpulseSendPort
-	</xsl:message>
-  </xsl:if-->
-  <xsl:if test="not(count(//SMLCL:EventReceivePort[@name=$curr_wu/@input_dst_port])=1) and count(//SMLCL:EventReceivePort)=1">
-  	  <xsl:message terminate="yes">
-Error: WeightUpdates must have one EventReceivePort
-	</xsl:message>
-  </xsl:if>
   <xsl:if test="count(//SMLCL:TimeDerivative)>0">
   	  <xsl:message terminate="yes">
 Error: WeightUpdates cannot contain TimeDerivatives
@@ -185,6 +170,27 @@ Error: Connections to WeightUpdates from sources other than the destination Neur
 
 	</xsl:for-each>
 	</xsl:for-each>
+	
+</xsl:for-each>
+
+<!-- GENERIC INPUTS BETWEEN NEURONS -->	
+<xsl:for-each select="/SMLLOWNL:SpineML/SMLLOWNL:Population/SMLLOWNL:Neuron/SMLLOWNL:Input[@src=//SMLLOWNL:Neuron/@name]">
+
+  // Add new weightupdate type - <xsl:value-of select="//SMLCL:ComponentClass/@name"/>: 
+  wu.varNames.clear();
+  wu.varTypes.clear();
+  //wu.varNames.push_back(tS("g"));
+  //wu.varTypes.push_back(tS("float"));
+  wu.pNames.clear();
+  
+  wu.simCode = tS(" \
+     <!-- LIMIT SCOPE --> { \n \
+  	 <!---->$(addtoinSyn) = $(<xsl:value-of select="@src_port"/>_NB_pre); \n \
+			$(updatelinsyn); \n \
+			}");
+  weightUpdateModels.push_back(wu);
+<!---->
+
 </xsl:for-each>
 
 </xsl:when>

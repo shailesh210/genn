@@ -16,7 +16,7 @@ EXECUTABLE	:= sim
 SOURCES		:= sim.cu
 
 INCLUDE_FLAGS	:= 
-LINK_FLAGS	:= 
+LINK_FLAGS	:= -lcurand
 CCFLAGS		:= 
 NVCCFLAGS	:= 
 

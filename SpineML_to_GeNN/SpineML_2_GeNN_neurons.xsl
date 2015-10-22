@@ -27,6 +27,14 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:SMLLOWNL="http://www.shef
 	<xsl:variable name="curr_nb" select="."/>
 	<!-- ENTER THE COMPONENT FILE -->
 	<xsl:for-each select="document(@url)">
+
+<!-- TEST FOR UNSUPPORTED FEATURES -->
+<!-- MULTIPLE RANDOMNORMALS - NOTE THIS WON'T FIND MULTIPLE RANDOMNORMALS IN SAME MATHINLINE -->
+<xsl:call-template name="testRandom">
+<xsl:with-param name="inlinesList" select="//SMLCL:MathInline"/>
+</xsl:call-template>
+
+
 	<xsl:choose>
 		<!-- FIRST HANDLE THE EXISTING NEURON TYPES BY RECOGNISING THEM -->
 		<xsl:when test="/SMLCL:SpineML/SMLCL:ComponentClass[@name = 'GeNNNativeTraubMiles']">
@@ -73,6 +81,20 @@ Error: Trying to add a neuron type without an input 'Isyn'. At the moment this w
   </xsl:for-each>
   n.varNames.push_back(tS("__regime_val"));
   n.varTypes.push_back(tS("int"));
+  <!-- Find if we have randomNormal and add var -->
+  <xsl:for-each select="//SMLCL:MathInline">
+  	<xsl:if test="contains(.,'randomNormal')">
+  n.varNames.push_back(tS("randomNormal"));
+  n.varTypes.push_back(tS("float"));
+  	</xsl:if>
+  </xsl:for-each>
+  <!-- Find if we have randomNormal and add var -->
+  <xsl:for-each select="//SMLCL:MathInline">
+  	<xsl:if test="contains(.,'randomUniform')">
+  n.varNames.push_back(tS("randomUniform"));
+  n.varTypes.push_back(tS("float"));
+  	</xsl:if>
+  </xsl:for-each>
   n.pNames.clear();
   <xsl:for-each select="//SMLCL:Parameter">
   n.pNames.push_back(tS("<xsl:value-of select="concat(@name,'_NB')"/>"));<!---->
@@ -104,8 +126,16 @@ Error: Trying to add a neuron type without an input 'Isyn'. At the moment this w
 <!----> <!---->} \n \
 <!----></xsl:for-each>
   	 </xsl:for-each>
-<!---->  	 //hack \n \
-  	 float randomNormal = 0; \n \
+  <xsl:for-each select="//SMLCL:MathInline">
+  	<xsl:if test="contains(.,'randomNormal')">
+<!---->  	 float randomNormal = lrandomNormal; \n \
+  	</xsl:if>
+  </xsl:for-each>
+  <xsl:for-each select="//SMLCL:MathInline">
+  	<xsl:if test="contains(.,'randomUniform')">
+<!---->  	 float randomUniform = lrandomUniform; \n \
+  	</xsl:if>
+  </xsl:for-each>
   	 <!-- DO ALIASES  -->
   	 <xsl:for-each select="//SMLCL:Alias"> <!-- ALIAS EQN -->
   	 	<!---->float <xsl:value-of select="@name"/> = (<!---->
@@ -351,7 +381,31 @@ Error: Trying to add a neuron type without an input 'Isyn'. At the moment this w
 
 </xsl:template>	
 
-
+<xsl:template name="testRandom">
+	<xsl:param name="inlinesList"/>
+	<xsl:param name="count" select="0"/>
+	<xsl:if test="$inlinesList">
+		<xsl:if test="number($count) > 1">
+			<xsl:message terminate="yes">
+Error: multiple randomNormal in the same component are not currently supported - sorry!
+			</xsl:message>
+		</xsl:if>
+		<xsl:if test="contains($inlinesList[1],'randomNormal')">
+			<xsl:call-template name="testRandom">
+				<xsl:with-param name="inlinesList" select="$inlinesList[position() > 1]"/>
+				<xsl:with-param name="count" select="$count+1"/>
+			</xsl:call-template>
+		</xsl:if>
+		<xsl:if test="not(contains($inlinesList[1],'randomNormal'))">
+			<xsl:call-template name="testRandom">
+				<xsl:with-param name="inlinesList" select="$inlinesList[position() > 1]"/>
+				<xsl:with-param name="count" select="$count"/>
+			</xsl:call-template>
+		</xsl:if>
+	</xsl:if>
+</xsl:template>
+	
+	
 <xsl:include href="utils_file_code.xsl"/>
 
 </xsl:stylesheet>
