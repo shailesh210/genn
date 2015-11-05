@@ -152,6 +152,8 @@ int main(int argc, char *argv[])
   t= 0.0;
   int done= 0;
   float last_t_report=  t;
+  int ts= int(0.2/DT);
+  int cntr=0;
   timer.startTimer();
   if (which == GPU){   
     //locust.runGPU(DT);
@@ -162,6 +164,7 @@ int main(int argc, char *argv[])
     {    
 
       locust.runGPU(DT); // run next batch
+      cntr++;
       locust.getSpikeNumbersFromGPU();
       locust.getSpikesFromGPU();
       pullPNSpikesFromDevice();
@@ -184,7 +187,7 @@ int main(int argc, char *argv[])
 			  fprintf(osfPN, "\n");
       }
 
-
+    if (cntr%ts==0){
     fprintf(osf, "%f ", t);
       for (int i= 0; i < 100; i++) {
          fprintf(osf, "%f ", VDN[i]);
@@ -195,6 +198,9 @@ int main(int argc, char *argv[])
       for (int i= 0; i < 100; i++) {
          fprintf(osf1, "%f ", VKC[i]);
        }
+    fprintf(osf1,"\n");
+    }
+
    /*  fprintf(osf1,"\n");
       for (int i= 0; i < 20; i++) {
          fprintf(osfl, "%f ", VLHI[i]);
@@ -223,13 +229,14 @@ int main(int argc, char *argv[])
 
       locust.runCPU(DT); // run next batch
 
-    
+      cntr++;    
 #ifdef TIMING
 	    fprintf(timeros, "%f %f %f \n", neuron_tme, synapse_tme, learning_tme);
 #endif
 
       locust.sum_spikes();
       locust.output_spikes(osf2, which);
+
 
     if (glbSpkCntPN[0]>0){
       	fprintf(osfPN,"%f %u ",t, glbSpkCntPN[0]);
@@ -239,6 +246,7 @@ int main(int argc, char *argv[])
 			fprintf(osfPN, "\n");
       }
 
+    if (cntr%ts==0){
     fprintf(osf, "%f ", t);
       for (int i= 0; i < 100; i++) {
          fprintf(osf, "%f ", VDN[i]);
@@ -249,6 +257,7 @@ int main(int argc, char *argv[])
          fprintf(osf1, "%f ", VKC[i]);
        }
     fprintf(osf1,"\n");
+    }
      /* for (int i= 0; i < 20; i++) {
          fprintf(osfl, "%f ", VLHI[i]);
        }
@@ -279,8 +288,8 @@ int main(int argc, char *argv[])
   timer.stopTimer();
   if (which == GPU) pullDNStateFromDevice();
   cerr << "output files are created under the current directory." << endl;
-  fprintf(timef, "%d %u %u %u %u %u %.4f %.2f %.1f %.2f\n",which, locust.model.sumNeuronN[locust.model.neuronGrpN-1], locust.sumPN, locust.sumKC, locust.sumLHI, locust.sumDN, timer.getElapsedTime(),VDN[0], TOTAL_TME, DT);
-  fprintf(stdout, "GPU=%d, %u neurons, %u PN spikes, %u KC spikes, %u LHI spikes, %u DN spikes, simulation took %.4f secs, VDN[0]=%.2f DT=%.1f %.2f\n",which, locust.model.sumNeuronN[locust.model.neuronGrpN-1], locust.sumPN, locust.sumKC, locust.sumLHI, locust.sumDN, timer.getElapsedTime(),VDN[0], TOTAL_TME, DT);
+  fprintf(timef, "%d %u %u %u %u %u %.4f %.2f %.1f %.4f\n",which, locust.model.sumNeuronN[locust.model.neuronGrpN-1], locust.sumPN, locust.sumKC, locust.sumLHI, locust.sumDN, timer.getElapsedTime(),VDN[0], TOTAL_TME, DT);
+  fprintf(stdout, "GPU=%d, %u neurons, %u PN spikes, %u KC spikes, %u LHI spikes, %u DN spikes, simulation took %.4f secs, VDN[0]=%.2f Total sim. time:%.1f, DT= %.4f\n",which, locust.model.sumNeuronN[locust.model.neuronGrpN-1], locust.sumPN, locust.sumKC, locust.sumLHI, locust.sumDN, timer.getElapsedTime(),VDN[0], TOTAL_TME, DT);
 
   fclose(osf);
   fclose(osf2);

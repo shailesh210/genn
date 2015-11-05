@@ -20,7 +20,7 @@
 //--------------------------------------------------------------------------
 
 //#define DT 0.02  //!< This defines the global time step at which the simulation will run
-#include "timestep.h" //Putting this here instead of sizes.h to avoid confusion of user project/genn variables
+#include "timestep.h" //Putting this here instead of sizes.h to avoid confusion of user project/genn variables. Program call would fail if it is not called through MBody_dt_runall.sh or if $GENN_PATH/userproject/include/timestep.h is not created manually. Alternatively you can uncomment the above line which sets DT.
 #include "modelSpec.h"
 #include "modelSpec.cc"
 #include "sizes.h"
