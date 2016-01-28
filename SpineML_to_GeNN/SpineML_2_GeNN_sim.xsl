@@ -90,8 +90,8 @@ bool sortConn (conn a,conn b)
 }
 
 struct prop {
-	unsigned int ind;
-	float val;
+	int ind;
+	double val;
 };
 
 // sorting function for properties
@@ -141,64 +141,7 @@ printf("Size checks successful\n");
 
 initializeAllSparseArrays();
 
-
-// ALLOCATE MEMORY FOR POISSON
-	
-	<!-- HACK FOR NOW -->
-	<xsl:for-each select="//SMLLOWNL:Neuron[@url='GeNNNativePoisson.xml']"> <!-- FOR EACH POISSON SOURCE -->
-		<!-- Fill an array size num_neurons with the rate value -->
-		// add data to array
-		<xsl:choose>
-		<xsl:when test="./SMLNL:Property[@name='therate']/SMLNL:FixedValue">
-		unsigned int rates<xsl:value-of select="translate(@name,' -','SH')"/>[<xsl:value-of select="@size"/>];<!---->
-		for (unsigned int i = 0; i &lt; <xsl:value-of select="@size"/>; ++i)<!---->
-			rates<xsl:value-of select="translate(@name,' -','SH')"/>[i] = <xsl:value-of select="./SMLNL:Property[@name='therate']/SMLNL:FixedValue/@value"/>;<!---->
-		</xsl:when>
-		<xsl:when test="./SMLNL:Property[@name='therate']/SMLNL:UniformDistribution">
-		unsigned int rates<xsl:value-of select="translate(@name,' -','SH')"/>[<xsl:value-of select="@size"/>];<!---->
-		for (unsigned int i = 0; i &lt; <xsl:value-of select="@size"/>; ++i)<!---->
-			rates<xsl:value-of select="translate(@name,' -','SH')"/>[i] = uniformRand(<xsl:value-of select="./SMLNL:Property[@name='therate']/SMLNL:UniformDistribution/@minimum"/>,<xsl:value-of select="./SMLNL:Property[@name='therate']/SMLNL:UniformDistribution/@maximum"/>);<!---->
-		</xsl:when>
-		<xsl:when test="./SMLNL:Property[@name='therate']/SMLNL:NormalDistribution">
-		unsigned int rates<xsl:value-of select="translate(@name,' -','SH')"/>[<xsl:value-of select="@size"/>];<!---->
-		for (unsigned int i = 0; i &lt; <xsl:value-of select="@size"/>; ++i)<!---->
-			rates<xsl:value-of select="translate(@name,' -','SH')"/>[i] = normalRand(<xsl:value-of select="./SMLNL:Property[@name='therate']/SMLNL:NormalDistribution/@mean"/>,<xsl:value-of select="./SMLNL:Property[@name='therate']/SMLNL:NormalDistribution/@variance"/>);<!---->
-		</xsl:when>
-		<xsl:when test="./SMLNL:Property[@name='therate']/SMLNL:PoissonDistribution">
-		unsigned int rates<xsl:value-of select="translate(@name,' -','SH')"/>[<xsl:value-of select="@size"/>];<!---->
-		for (unsigned int i = 0; i &lt; <xsl:value-of select="@size"/>; ++i)<!---->
-			rates<xsl:value-of select="translate(@name,' -','SH')"/>[i] = poissonRand();<!---->
-		</xsl:when>
-		<xsl:when test="./SMLNL:Property[@name='therate']/SMLNL:ValueList">
-		unsigned int rates<xsl:value-of select="translate(@name,' -','SH')"/> [] = {<!---->
-			<!-- PRETTY SURE THIS WILL WORK - BUT IT IS SLOW AND I DON'T LIKE IT (load then sort instead!) -->
-			<xsl:for-each select="./SMLNL:Property[@name='therate']/SMLNL:ValueList/SML:Value">
-				<xsl:variable name="index" select="position()-1"/>
-				<xsl:for-each select="./SMLNL:Property[@name='therate']/SMLNL:ValueList/SML:Value">
-					<xsl:if test="@index=$index">
-						<xsl:value-of select="concat(@value,',')"/>
-					</xsl:if>
-				</xsl:for-each>				
-			</xsl:for-each>}
-<!---->	</xsl:when>	
-		<xsl:otherwise>
-			<xsl:message terminate="yes">
-Error: Native Poisson parameter 'therate' not found or undefined 
-			</xsl:message>
-		</xsl:otherwise>
-		</xsl:choose>	
-      	fprintf(stderr, "# %d %d %d %d \n", rates<xsl:value-of select="translate(@name,' -','SH')"/>[0],rates<xsl:value-of select="translate(@name,' -','SH')"/>[1],rates<xsl:value-of select="translate(@name,' -','SH')"/>[2],rates<xsl:value-of select="translate(@name,' -','SH')"/>[3]);
-
-		// copy to GPU
-		int size = sizeof(unsigned int)*<xsl:value-of select="@size"/>;
-		unsigned int * d_rates<xsl:value-of select="translate(@name,' -','SH')"/>;
-		if (which == GPU) {
-			CHECK_CUDA_ERRORS((cudaMalloc((void**) &amp;d_rates<xsl:value-of select="translate(@name,' -','SH')"/>, size)));
-			CHECK_CUDA_ERRORS((cudaMemcpy(d_rates<xsl:value-of select="translate(@name,' -','SH')"/>, rates<xsl:value-of select="translate(@name,' -','SH')"/>, size, cudaMemcpyHostToDevice))); 
-		}
-	</xsl:for-each> <!-- END FOR EACH POISSON SOURCE -->
-
-  
+ 
 // INIT CODE
   //initGRaw();
   if (which == CPU) {
@@ -215,7 +158,7 @@ Error: Native Poisson parameter 'therate' not found or undefined
   // output general parameters to output file and start the simulation
 
   fprintf(stderr, "# We are running with fixed time step %f \n", DT);
-  fprintf(stderr, "# initial wait time execution ... \n");
+  fprintf(stderr, "# executing ... \n");
 
  t= 0.0;
  unsigned int offset = 0;
@@ -290,6 +233,49 @@ CHECK_CUDA_ERRORS(cudaMalloc((void **)&amp;tmpd_randomNormal<xsl:value-of select
  rngData.seed = 123;
  
  timer.startTimer();	
+
+// fill in the Properties that are explicit lists
+<xsl:for-each select="//SMLNL:Property[count(SMLNL:ValueList)=1]">
+<xsl:variable name="variableName">
+	<xsl:value-of select="@name"/>_<!---->
+	<xsl:if test="local-name(..) = 'Neuron'">NB<xsl:value-of select="translate(../@name,' -','SH')"/></xsl:if>
+	<xsl:if test="local-name(..) = 'WeightUpdate'">WU</xsl:if>
+	<xsl:if test="local-name(..) = 'PostSynapse'">PS</xsl:if>
+	<xsl:if test="local-name(..) = 'PostSynapse' or local-name(..) = 'WeightUpdate'">
+		<xsl:variable name="curr_prop_syn" select="generate-id(../..)"/>
+		<xsl:for-each select="/SMLLOWNL:SpineML//SMLLOWNL:Synapse"> <!-- FOR-EACH SYNAPSE -->
+			<xsl:if test="$curr_prop_syn = generate-id(.)">
+				<xsl:value-of select="concat('Synapse',position())"/>_<xsl:value-of select="translate(../../SMLLOWNL:Neuron/@name,' -','SH')"/>_to_<xsl:value-of select="translate(../@dst_population,' -','SH')"/><!---->
+			</xsl:if>
+		</xsl:for-each>
+	</xsl:if>
+</xsl:variable>
+// <xsl:value-of select="$variableName"/>
+{ // scope to allow us to reuse the file name locally
+FILE * sv_file;
+sv_file = fopen("<xsl:value-of select="SMLNL:ValueList/SMLNL:BinaryFile/@file_name"/>","rb");
+vector &lt;prop&gt; sv_data;
+sv_data.resize(<xsl:value-of select="SMLNL:ValueList/SMLNL:BinaryFile/@num_elements"/>);
+if (!sv_file) {
+	cerr &lt;&lt; "Error opening binary state variable file\n\n"; exit(-1);}
+fread(&amp;sv_data[0], sizeof(prop), sv_data.size(),sv_file);
+// sort the data
+//std::sort(sv_data.begin(),sv_data.end(),sortProp);
+// write into variable
+//fprintf(stderr, "# copying data for <xsl:value-of select="$variableName"/> ... %f# %f \n", sv_data[0].val, sv_data[1].val);
+for (uint i = 0; i &lt; sv_data.size(); ++i) 
+{
+	<xsl:value-of select="$variableName"/>[i] = sv_data[i].val;
+}
+if (which == GPU) {
+	// copy to device
+	CHECK_CUDA_ERRORS(cudaMemcpy( d_<xsl:value-of select="$variableName"/>, <xsl:value-of select="$variableName"/>, sv_data.size() * sizeof(float),cudaMemcpyHostToDevice));
+
+}
+} // end scope
+
+</xsl:for-each>
+
  for (int i= 0; i &lt; <xsl:value-of select="number($experiment_file//SMLEX:Simulation/@duration)*1000.0 div number($experiment_file//@dt)"/>; i++) {
       
     if (which == GPU) {
@@ -342,13 +328,25 @@ CHECK_CUDA_ERRORS(cudaMalloc((void **)&amp;tmpd_randomNormal<xsl:value-of select
        
        <!-- Create the variable for the log temp file name -->
        <xsl:variable name="logName"><xsl:value-of select="translate(@target,' ','_')"/>_<xsl:value-of select="@port"/>_log</xsl:variable>
+
+	<xsl:variable name="genn_var_name">
+		<xsl:for-each select="$model_file//*[@name=$target]">
+		<xsl:if test="local-name(.) = 'Neuron'">NB<xsl:value-of select="translate(@name,' -','SH')"/></xsl:if>
+		<xsl:if test="local-name(.) = 'WeightUpdate'">WU</xsl:if>
+		<xsl:if test="local-name(.) = 'PostSynapse'">PS</xsl:if>
+		<xsl:if test="local-name(.) = 'PostSynapse' or local-name(..) = 'WeightUpdate'">
+		<xsl:variable name="curr_syn" select="generate-id(..)"/>
+		<xsl:for-each select="/SMLLOWNL:SpineML//SMLLOWNL:Synapse"> <!-- FOR-EACH SYNAPSE -->
+			<xsl:if test="$curr_syn = generate-id(.)">
+				<xsl:value-of select="concat('Synapse',position())"/>_<xsl:value-of select="translate(../../SMLLOWNL:Neuron/@name,' -','SH')"/>_to_<xsl:value-of select="translate(../@dst_population,' -','SH')"/><!---->
+			</xsl:if>
+		</xsl:for-each>
+		</xsl:if>
+		</xsl:for-each>
+	</xsl:variable>
        
        <xsl:variable name="host_var_name">
-       <xsl:value-of select="@port"/><!---->
-       <xsl:if test="count($model_file//SMLLOWNL:Neuron[@name=$target])=1">_NB</xsl:if>
-       <xsl:if test="count($model_file//SMLLOWNL:WeightUpdate[@name=$target])=1">_WU</xsl:if>
-       <xsl:if test="count($model_file//SMLLOWNL:PostSynapse[@name=$target])=1">_PS</xsl:if>
-       <xsl:value-of select="translate(@target,' -','SH')"/>
+       	<xsl:value-of select="@port"/>_<xsl:value-of select="$genn_var_name"/><!---->
        </xsl:variable>
        
        <xsl:variable name="var_size">
@@ -359,11 +357,7 @@ CHECK_CUDA_ERRORS(cudaMalloc((void **)&amp;tmpd_randomNormal<xsl:value-of select
        
        // Fetch variable from the device to the local array
        CHECK_CUDA_ERRORS(cudaMemcpy(<xsl:value-of select="$host_var_name"/>, d_<!---->
-       <xsl:value-of select="@port"/><!---->
-       <xsl:if test="count($model_file//SMLLOWNL:Neuron[@name=$target])=1">_NB</xsl:if>
-       <xsl:if test="count($model_file//SMLLOWNL:WeightUpdate[@name=$target])=1">_WU</xsl:if>
-       <xsl:if test="count($model_file//SMLLOWNL:PostSynapse[@name=$target])=1">_PS</xsl:if>
-       <xsl:value-of select="translate(@target,' -','SH')"/>, <xsl:value-of select="$var_size"/>*sizeof(float), cudaMemcpyDeviceToHost));
+       <xsl:value-of select="$host_var_name"/>, <xsl:value-of select="$var_size"/>*sizeof(float), cudaMemcpyDeviceToHost));
         <xsl:if test="@indices">
 		// Collate the selected values into the temporary variable
        <xsl:value-of select="$logName"/>TEMP.clear();
@@ -432,12 +426,24 @@ CHECK_CUDA_ERRORS(cudaMalloc((void **)&amp;tmpd_randomNormal<xsl:value-of select
        <!-- Create the variable for the log temp file name -->
        <xsl:variable name="logName"><xsl:value-of select="translate(@target,' ','_')"/>_<xsl:value-of select="@port"/>_log</xsl:variable>
        
+	<xsl:variable name="genn_var_name">
+		<xsl:for-each select="$model_file//*[@name=$target]">
+		<xsl:if test="local-name(.) = 'Neuron'">NB<xsl:value-of select="translate(@name,' -','SH')"/></xsl:if>
+		<xsl:if test="local-name(.) = 'WeightUpdate'">WU</xsl:if>
+		<xsl:if test="local-name(.) = 'PostSynapse'">PS</xsl:if>
+		<xsl:if test="local-name(.) = 'PostSynapse' or local-name(..) = 'WeightUpdate'">
+		<xsl:variable name="curr_syn" select="generate-id(..)"/>
+		<xsl:for-each select="/SMLLOWNL:SpineML//SMLLOWNL:Synapse"> <!-- FOR-EACH SYNAPSE -->
+			<xsl:if test="$curr_syn = generate-id(.)">
+				<xsl:value-of select="concat('Synapse',position())"/>_<xsl:value-of select="translate(../../SMLLOWNL:Neuron/@name,' -','SH')"/>_to_<xsl:value-of select="translate(../@dst_population,' -','SH')"/><!---->
+			</xsl:if>
+		</xsl:for-each>
+		</xsl:if>
+		</xsl:for-each>
+	</xsl:variable>
+       
        <xsl:variable name="host_var_name">
-       <xsl:value-of select="@port"/><!---->
-       <xsl:if test="count($model_file//SMLLOWNL:Neuron[@name=$target])=1">_NB</xsl:if>
-       <xsl:if test="count($model_file//SMLLOWNL:WeightUpdate[@name=$target])=1">_WU</xsl:if>
-       <xsl:if test="count($model_file//SMLLOWNL:PostSynapse[@name=$target])=1">_PS</xsl:if>
-       <xsl:value-of select="translate(@target,' -','SH')"/>
+       	<xsl:value-of select="@port"/>_<xsl:value-of select="$genn_var_name"/><!---->
        </xsl:variable>
        
        <xsl:variable name="var_size">

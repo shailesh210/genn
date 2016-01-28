@@ -38,7 +38,7 @@ Error: Low level API not supported - Groups are not supported by GeNN
 	</xsl:if>
 	<!-- NOTHING BUT FIXED PROPERTIES (EXCEPT G) -->
 	<xsl:if test="//SMLNL:Property[not(@name='g')]/SMLNL:ValueList | //SMLNL:Property[not(@name='g')]/SMLNL:UniformDistribution | //SMLNL:Property[not(@name='g')]/SMLNL:NormalDistribution | //SMLNL:Property[not(@name='g')]/SMLNL:PoissonDistribution">
-		<xsl:message terminate="yes">
+		<xsl:message terminate="no">
 Error: Non-FixedValue Parameter or StateVariable value found - Only FixedValues are supported by GeNN
 		</xsl:message>
 	</xsl:if>
@@ -128,12 +128,9 @@ Error: Random state variable value for '<xsl:value-of select="$curr_par_name"/>'
 				</xsl:when>
 				<!-- IF THERE EXISTS A PROPERTY LIST FOR THIS STATE VARIABLE -->
 				<xsl:when test="$curr_props[@name=$curr_par_name]/SMLNL:ValueList">
-					<!-- NOT CURRENTLY SUPPORTED --> // <xsl:value-of select="position()-1"/> - <xsl:value-of select="$curr_par_name"/>
+					<xsl:value-of select="0.0"/>, // <xsl:value-of select="position()-1"/> - <xsl:value-of select="$curr_par_name"/>
 					<xsl:text>
 		</xsl:text>
-					<xsl:message terminate="yes">
-Error: Explicit list of state variable values used for '<xsl:value-of select="$curr_par_name"/>' in model - this is not currently supported by GeNN
-					</xsl:message>
 				</xsl:when>
 				<!-- IF NO PROPERTY FOR THIS STATE VARIABLE -->
 				<xsl:otherwise>
@@ -233,7 +230,7 @@ Error: Explicit list of parameter values for '<xsl:value-of select="$curr_par_na
 				</xsl:when>
 				<!-- IF THERE EXISTS A PROPERTY LIST FOR THIS STATE VARIABLES -->
 				<xsl:when test="$curr_props[@name=$curr_par_name]/SMLNL:ValueList">
-					<!-- NOT CURRENTLY SUPPORTED --> // <xsl:value-of select="position()-1"/> - <xsl:value-of select="$curr_par_name"/>
+					<xsl:value-of select="0.0"/>, // <xsl:value-of select="position()-1"/> - <xsl:value-of select="$curr_par_name"/>
 					<xsl:text>
 		</xsl:text>
 				</xsl:when>
@@ -321,12 +318,9 @@ Error: Random state variable value for '<xsl:value-of select="$curr_par_name"/>'
 				</xsl:when>
 				<!-- IF THERE EXISTS A PROPERTY LIST FOR THIS STATE VARIABLES -->
 				<xsl:when test="$curr_propsPS[@name=$curr_par_name]/SMLNL:ValueList">
-					<!-- NOT CURRENTLY SUPPORTED --> // <xsl:value-of select="position()-1"/> - <xsl:value-of select="$curr_par_name"/>
+					<xsl:value-of select="0.0"/>, // <xsl:value-of select="position()-1"/> - <xsl:value-of select="$curr_par_name"/>
 					<xsl:text>
 		</xsl:text>
-					<xsl:message terminate="yes">
-Error: Explicit list of state variable values used for '<xsl:value-of select="$curr_par_name"/>' in model - this is not currently supported by GeNN
-					</xsl:message>
 				</xsl:when>
 				<!-- IF NO PROPERTY FOR THIS STATE VARIABLES -->
 				<xsl:otherwise>

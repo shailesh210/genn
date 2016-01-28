@@ -50,8 +50,12 @@ set -e
 MODEL_DIR=$PWD"/model"
 LOG_DIR=$PWD"/temp"
 
+# Declare an array for the property change options
+declare -a PROPERTY_CHANGES
+PCI=0 # Property Change Iterator
+
 # get the command line options...
-while getopts i:e:w:srm:o:n:a:vV\? opt
+while getopts i:e:w:srm:o:p:n:a:vV\? opt
 do
 case "$opt" in
 i)  MODEL_DIR="$OPTARG"
@@ -63,6 +67,9 @@ w)  GENN_2_BRAHMS_DIR="$OPTARG"
 m)  MODEL_DIR="$OPTARG"
 ;;
 o)  OUTPUT_DIR="$OPTARG"
+;;
+p)  PROPERTY_CHANGES[$PCI]="--property_change=$OPTARG"
+PCI=$((PCI+1))
 ;;
 \?) usage
 ;;
@@ -89,6 +96,23 @@ elif [ $(uname) = 'Windows_NT' ] || [ $(uname) = 'MINGW32_NT-6.1' ]; then
 OS='Windows'
 else
 OS='OSX'
+fi
+
+# Check we have spineml_preflight
+which spineml_preflight >/dev/null
+spfrtn=$?
+if [ "$spfrtn" -ne 0 ]; then
+    echo "Please ensure you installed SpineML_Preflight for the spineml_preflight"
+    echo "binary which should be installed somewhere in your \$PATH"
+    exit -1
+fi
+
+# Preflight the model - note we're outputting the contents of the PROPERTY_CHANGES
+# array which contains --property_change=a:b:3 type options.
+spineml_preflight -e $MODEL_DIR"/"$EXPERIMENT_NAME "${PROPERTY_CHANGES[@]}"
+if [ "$?" -ne "0" ]; then
+    echo "Failed to preflight the model." >&2
+    exit -1
 fi
 
 echo "*Running XSLT" > $MODEL_DIR/time.txt
