@@ -386,6 +386,8 @@ if (which == GPU) {
  		if (stop_file) break;
       	
       	//
+	// update command prompt
+	fprintf(stderr, "%f\r", t);
 	}
     if (which == CPU) {
       <!-- ADD CODE TO GENERATE RANDOM NUMBERS -->

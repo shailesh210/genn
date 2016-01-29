@@ -99,13 +99,14 @@ OS='OSX'
 fi
 
 # Check we have spineml_preflight
-which spineml_preflight >/dev/null
+which spineml_preflight > /dev/null
 spfrtn=$?
 if [ "$spfrtn" -ne 0 ]; then
     echo "Please ensure you installed SpineML_Preflight for the spineml_preflight"
     echo "binary which should be installed somewhere in your \$PATH"
     exit -1
 fi
+
 
 # Preflight the model - note we're outputting the contents of the PROPERTY_CHANGES
 # array which contains --property_change=a:b:3 type options.
