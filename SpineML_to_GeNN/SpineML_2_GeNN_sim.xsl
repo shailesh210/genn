@@ -258,9 +258,12 @@ vector &lt;prop&gt; sv_data;
 sv_data.resize(<xsl:value-of select="SMLNL:ValueList/SMLNL:BinaryFile/@num_elements"/>);
 if (!sv_file) {
 	cerr &lt;&lt; "Error opening binary state variable file\n\n"; exit(-1);}
-fread(&amp;sv_data[0], sizeof(prop), sv_data.size(),sv_file);
+for (uint i = 0; i &lt; sv_data.size(); ++i) {
+	int num = fread(&amp;(sv_data[i].ind), sizeof(int), 1,sv_file);
+	num = fread(&amp;(sv_data[i].val), sizeof(double), 1,sv_file);
+}
 // sort the data
-//std::sort(sv_data.begin(),sv_data.end(),sortProp);
+std::sort(sv_data.begin(),sv_data.end(),sortProp);
 // write into variable
 //fprintf(stderr, "# copying data for <xsl:value-of select="$variableName"/> ... %f# %f \n", sv_data[0].val, sv_data[1].val);
 for (uint i = 0; i &lt; sv_data.size(); ++i) 
