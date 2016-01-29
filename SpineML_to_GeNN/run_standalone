@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#export CUDA_PATH=/usr/local/cuda DBGMODE=0
+#export GENN_PATH=/home/alexcope/gennGit 
+#export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH 
+#export PATH=/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/#bin:/sbin:/bin:/usr/games:/usr/local/games:/home/alexcope/gennGit/lib/bin
+source ~/.bashrc
+
+echo "running..."
+./convert_script.sh -m $1 -w $GENN_PATH/SpineML_2_GeNN -o $GENN_PATH/SpineML_2_GeNN/temp -e 0
