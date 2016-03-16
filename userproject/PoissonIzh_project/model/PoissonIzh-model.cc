@@ -136,7 +136,7 @@ void classol::generate_baserates()
 void classol::run(float runtime, unsigned int which)
 {
   unsigned int offset= 0;
-  int riT= (int) (runtime/DT);
+  int riT= (int) (runtime/DT+1e-6);
 
   for (int i= 0; i < riT; i++) {
     if (which == GPU)
