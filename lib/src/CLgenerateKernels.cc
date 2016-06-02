@@ -87,20 +87,20 @@ void CLgenNeuronKernel(NNmodel &model, //!< Model description
     // these variables deal with high V "spike type events"
     for (int i = 0; i < model.neuronGrpN; i++) {
 	if (model.neuronNeedSpkEvnt[i]) {
-	    os << "__shared__ volatile unsigned int posSpkEvnt;" << ENDL;
-	    os << "__shared__ unsigned int shSpkEvnt[" << neuronBlkSz << "];" << ENDL;
+	    os << "__local volatile unsigned int posSpkEvnt;" << ENDL;
+	    os << "__local unsigned int shSpkEvnt[" << neuronBlkSz << "];" << ENDL;
 	    os << "unsigned int spkEvntIdx;" << ENDL;
-	    os << "__shared__ volatile unsigned int spkEvntCount;" << ENDL;
+	    os << "__local volatile unsigned int spkEvntCount;" << ENDL;
 	    break;
 	}
     }
 
 	
     // these variables now deal only with true spikes, not high V "events"
-    os << "__shared__ unsigned int shSpk[" << neuronBlkSz << "];" << ENDL;
-    os << "__shared__ volatile unsigned int posSpk;" << ENDL;
+    os << "__local unsigned int shSpk[" << neuronBlkSz << "];" << ENDL;
+    os << "__local volatile unsigned int posSpk;" << ENDL;
     os << "unsigned int spkIdx;" << ENDL;
-    os << "__shared__ volatile unsigned int spkCount;" << ENDL;
+    os << "__local volatile unsigned int spkCount;" << ENDL;
     os << ENDL;
 
 	
@@ -876,7 +876,7 @@ void CLgenSynapseKernel(NNmodel &model, //!< Model description
     os << "unsigned int id = BLOCKSZ_SYN * get_group_id(0) + get_local_id(0) ;" << ENDL;
     os << "unsigned int lmax, j, r;" << ENDL;
     os << model.ftype << " addtoinSyn;" << ENDL;  
-    os << "volatile __shared__ " << model.ftype << " shLg[BLOCKSZ_SYN];" << ENDL;
+    os << "volatile __local " << model.ftype << " shLg[BLOCKSZ_SYN];" << ENDL;
 
     // case-dependent variables
     for (int i = 0; i < model.synapseGrpN; i++) { 
@@ -896,15 +896,15 @@ void CLgenSynapseKernel(NNmodel &model, //!< Model description
     }  
     for (int i = 0; i < model.synapseGrpN; i++) {
 	if (model.synapseUsesTrueSpikes[i] || model.synapseUsesPostLearning[i]) {  
-	    os << "__shared__ unsigned int shSpk[BLOCKSZ_SYN];" << ENDL;
-	    //os << "__shared__ " << model.ftype << " shSpkV[BLOCKSZ_SYN];" << ENDL;
+	    os << "__local unsigned int shSpk[BLOCKSZ_SYN];" << ENDL;
+	    //os << "__local " << model.ftype << " shSpkV[BLOCKSZ_SYN];" << ENDL;
 	    os << "unsigned int lscnt, numSpikeSubsets;" << ENDL;
 	    break;
 	}
     }
     for (int i = 0; i < model.synapseGrpN; i++) {
 	if (model.synapseUsesSpikeEvents[i]) {
-	    os << "__shared__ unsigned int shSpkEvnt[BLOCKSZ_SYN];" << ENDL;
+	    os << "__local unsigned int shSpkEvnt[BLOCKSZ_SYN];" << ENDL;
 	    os << "unsigned int lscntEvnt, numSpikeSubsetsEvnt;" << ENDL;    
 	    break;
 	}
@@ -965,12 +965,12 @@ void CLgenSynapseKernel(NNmodel &model, //!< Model description
 
 	// generate the code for processing spike-like events
 	if (model.synapseUsesSpikeEvents[i]) {	
-	    generate_process_presynaptic_events_code(os, model, src, trg, i, localID, inSynNo, tS("Evnt"));
+	    CLgenerate_process_presynaptic_events_code(os, model, src, trg, i, localID, inSynNo, tS("Evnt"));
 	}
 
 	// generate the code for processing true spike events
 	if (model.synapseUsesTrueSpikes[i]) {
-	    generate_process_presynaptic_events_code(os, model, src, trg, i, localID, inSynNo, tS(""));
+	    CLgenerate_process_presynaptic_events_code(os, model, src, trg, i, localID, inSynNo, tS(""));
 	}       
 	os << ENDL;
 	   
@@ -1042,7 +1042,7 @@ void CLgenSynapseKernel(NNmodel &model, //!< Model description
 	// kernel code
 	os << OB(215);
 	os << "unsigned int id = " << learnBlkSz << " * get_group_id(0)  + get_local_id(0) ;" << ENDL;
-	os << "__shared__ unsigned int shSpk[" << learnBlkSz << "];" << ENDL;
+	os << "__local unsigned int shSpk[" << learnBlkSz << "];" << ENDL;
 	os << "unsigned int lscnt, numSpikeSubsets, lmax, j, r;" << ENDL;
 	os << ENDL;
 

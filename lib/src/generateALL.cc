@@ -35,7 +35,7 @@
 #include "CodeHelper.cc"
 CodeHelper hlp;
 
-#include "generateKernels.cc"
+#include "CLgenerateKernels.cc"
 #include "generateRunner.cc"
 #include "generateCPU.cc"
 
@@ -126,10 +126,10 @@ void generate_model_runner(NNmodel &model,  //!< Model description
   genRunnerGPU(model, path, cout);
 
   // generate neuron kernels
-  genNeuronKernel(model, path, cout);
+  CLgenNeuronKernel(model, path, cout);
 
   // generate synapse and learning kernels
-  if (model.synapseGrpN > 0) genSynapseKernel(model, path, cout);
+  if (model.synapseGrpN > 0) CLgenSynapseKernel(model, path, cout);
 #endif
 
   // Generate the equivalent of neuron kernel

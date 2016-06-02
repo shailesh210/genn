@@ -95,7 +95,7 @@ void genNeuronKernel(NNmodel &model, //!< Model description
     // kernel code
     unsigned int neuronGridSz = model.padSumNeuronN[model.neuronGrpN - 1];
     neuronGridSz = neuronGridSz / neuronBlkSz;
-    if (neuronGridSz <  [theDev].maxGridSize[1]) {
+    if (neuronGridSz <  deviceProp[theDev].maxGridSize[1]) {
 	os << "unsigned int id = " << neuronBlkSz << " * blockIdx.x + threadIdx.x;" << ENDL;
     }
     else {
