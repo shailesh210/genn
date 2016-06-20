@@ -1,15 +1,4 @@
-/*--------------------------------------------------------------------------
-  Author: Thomas Nowotny
-  
-  Institute: Center for Computational Neuroscience and Robotics
-  University of Sussex
-  Falmer, Brighton BN1 9QJ, UK 
-  
-  email to:  T.Nowotny@sussex.ac.uk
-  
-  initial version: 2010-02-07
-  
-  --------------------------------------------------------------------------*/
+
 
 //-----------------------------------------------------------------------
 /*!  \file CLgenerateRunner.cc
@@ -20,7 +9,7 @@
 */
 //--------------------------------------------------------------------------
 
-#include "CLgenerateRunner.h"
+#include "generateRunner.h"
 #include "global.h"
 #include "utils.h"
 #include "stringUtils.h"
@@ -38,7 +27,7 @@ void variable_def(ofstream &os, string type, string name)
 {
     os << type << " " << name << ";" << ENDL;
 #ifndef CPU_ONLY
-	#ifdef OPENCL		//OpenCL
+	#ifndef OPENCL		//OpenCL
 		os << type << " d_" << name << ";" << ENDL;
 		
 	#else				//CUDA
@@ -76,7 +65,7 @@ void extern_variable_def(ofstream &os, string type, string name)
 */
 //--------------------------------------------------------------------------
 
-void CLgenRunner(NNmodel &model, //!< Model description
+void genRunner(NNmodel &model, //!< Model description
 	       string &path //!< Path for code generationn
     )
 {
@@ -169,11 +158,13 @@ void CLgenRunner(NNmodel &model, //!< Model description
     os << "#include \"sparseUtils.h\"" << ENDL << ENDL;
     os << "#include \"sparseProjection.h\"" << ENDL;
     os << "#include <stdint.h>" << ENDL;
-    os << ENDL;
+	os << "#include <CL/cl.h>" << ENDL;								//////////// check the correct file to include this header
+    os << "#include <CL/cl_ext.h>" << ENDL;
+	os << ENDL;
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
-	os<< "void openCLErrorCodeToString(int errorCode)"<<ENDL;
+	#ifndef OPENCL
+	os<< "char* openCLErrorCodeToString(int errorCode)"<<ENDL;
 	os<< "{"<<ENDL;
 	os<< "	switch(errorCode)"<<ENDL;
 	os<< "	{"<<ENDL;
@@ -243,8 +234,6 @@ void CLgenRunner(NNmodel &model, //!< Model description
     os<< "       return \"CL_INVALID_MIP_LEVEL\";"<<ENDL;
     os<< "    case CL_INVALID_GLOBAL_WORK_SIZE:"<<ENDL;
     os<< "        return \"CL_INVALID_GLOBAL_WORK_SIZE\";"<<ENDL;
-    os<< "    case CL_INVALID_GL_SHAREGROUP_REFERENCE_KHR:"<<ENDL;
-    os<< "        return \"CL_INVALID_GL_SHAREGROUP_REFERENCE_KHR\";"<<ENDL;
     os<< "    case CL_PLATFORM_NOT_FOUND_KHR:"<<ENDL;
     os<< "        return \"CL_PLATFORM_NOT_FOUND_KHR\";"<<ENDL;
     os<< "    case CL_DEVICE_PARTITION_FAILED_EXT:"<<ENDL;
@@ -255,7 +244,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
     os<< "        return \"unknown error code\";"<<ENDL;
     os<< "}"<<ENDL;
 
-    os<< "return \"unknown error code\	";"<<ENDL;
+//    os<< "return \"unknown error code\";"<<ENDL;
 	os<< "}"<<ENDL;
 	
 	//write OpenCL error handler macro
@@ -269,7 +258,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	os<< "			cout << \"Location : \" << __FILE__ << \":\" << __LINE__ << endl; \\"<<ENDL;
 	os<< "			exit(EXIT_FAILURE);\\"<<ENDL;
 	os<< "		}\\"<<ENDL;
-	os<< "}\\"<<ENDL;
+	os<< "}"<<ENDL;
 	os<< "#endif"<<ENDL;
 	
 	#else
@@ -328,7 +317,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
     os << "extern " << model.ftype << " t;" << ENDL;
     if (model.timing) {
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "extern cl_event neuronStart, neuronStop;" << ENDL;
 	#else
 		os << "extern cudaEvent_t neuronStart, neuronStop;" << ENDL;
@@ -338,7 +327,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	os << "extern CStopWatch neuron_timer;" << ENDL;
 	if (model.synapseGrpN > 0) {
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "extern cl_event synapseStart, synapseStop;" << ENDL;
 	#else
 	    os << "extern cudaEvent_t synapseStart, synapseStop;" << ENDL;
@@ -349,7 +338,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	}
 	if (model.lrnGroups > 0) {
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "extern cl_event learningStart, learningStop;" << ENDL;
 	#else
 	    os << "extern cudaEvent_t learningStart, learningStop;" << ENDL;
@@ -360,11 +349,11 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	}
 	if (model.synDynGroups > 0) {
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "extern cl_event synDynStart, synDynStop;" << ENDL;
 	#else
 	    os << "extern cudaEvent_t synDynStart, synDynStop;" << ENDL;
-	#elseif
+	#endif
 #endif
 	    os << "extern double synDyn_tme;" << ENDL;
 	    os << "extern CStopWatch synDyn_timer;" << ENDL;
@@ -497,7 +486,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
     // HOST AND DEVICE FUNCTIONS					//check later
 
 #ifndef CPU_ONLY
-	//#ifdef OPENCL
+	//#ifndef OPENCL
 		
 
     os << "// ------------------------------------------------------------------------" << ENDL;
@@ -810,7 +799,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
     os << model.ftype << " t;" << ENDL;
     if (model.timing) {
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "cl_event neuronEvent;"<<ENDL;
 		os << "cl_ulong neuronStart, neuronStop;" << ENDL;
 	#else
@@ -822,7 +811,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	os << "CStopWatch neuron_timer;" << ENDL;
 	if (model.synapseGrpN > 0) {
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "cl_events synapseEvent;"<<ENDL;
 		os << "cl_ulong synapseStart, synapseStop;" << ENDL;
 	#else
@@ -834,7 +823,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	}
 	if (model.lrnGroups > 0) {
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "cl_event learningEvent;"<<ENDL;
 		os << "cl_ulong learningStart, learningStop;" << ENDL;
 	#else
@@ -846,7 +835,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	}
 	if (model.synDynGroups > 0) {
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "cl_event synDynEvent;" << ENDL;
 		os << "cl_ulong synDynStart, synDynStop" << ENDL;
 	#else
@@ -868,8 +857,8 @@ void CLgenRunner(NNmodel &model, //!< Model description
     os << ENDL;
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
-		os << "volatile unsigned int d_done" << ENDL;
+	#ifndef OPENCL
+		os << "volatile unsigned int d_done;" << ENDL;
 	#else
 		os << "__device__ volatile unsigned int d_done;" << ENDL;
 	#endif
@@ -886,7 +875,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	if (model.neuronDelaySlots[i] > 1) {
 	    os << "unsigned int spkQuePtr" << model.neuronName[i] << ";" << ENDL;
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << " volatile unsigned int dd_spkQuePtr" << model.neuronName[i] << ";" << ENDL;
 	#else
 	    os << "__device__ volatile unsigned int dd_spkQuePtr" << model.neuronName[i] << ";" << ENDL;
@@ -924,7 +913,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	if (model.synapseConnType[i] == SPARSE) {
 	    os << "SparseProjection C" << model.synapseName[i] << ";" << ENDL;
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "unsigned int *d_indInG" << model.synapseName[i] << ";" << ENDL;
 		os << "unsigned int *d_ind" << model.synapseName[i] << ";" << ENDL;
 		if (model.synapseUsesSynapseDynamics[i]) 
@@ -1050,7 +1039,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	}
 	if (model.lrnGroups > 0) {
 #ifndef CPU_ONLY
-	#ifndef
+	#ifndef OPENCL
 	    os << "    cudaEventCreate(&learningStart);" << ENDL;
 	    os << "    cudaEventCreate(&learningStop);" << ENDL;
 	#endif
@@ -1059,7 +1048,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	}
 	if (model.synDynGroups > 0) {
 #ifndef CPU_ONLY
-	#ifndef
+	#ifndef OPENCL
 	    os << "    cudaEventCreate(&synDynStart);" << ENDL;
 	    os << "    cudaEventCreate(&synDynStop);" << ENDL;
 	#endif
@@ -1080,7 +1069,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	}
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "glbSpkCnt" << model.neuronName[i] << "=clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os << size << " * sizeof(unsigned int),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1113,7 +1102,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	}
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "glbSpk" << model.neuronName[i] << "=clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os << size << " * sizeof(unsigned int),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1140,7 +1129,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	    size = model.neuronDelaySlots[i];
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "glbSpkCntEvnt" << model.neuronName[i] << "=clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os << size << " * sizeof(unsigned int),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1164,7 +1153,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	    size = model.neuronN[i] * model.neuronDelaySlots[i];
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "glbSpkEvnt" << model.neuronName[i] << "=clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os << size << " * sizeof(unsigned int),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1191,7 +1180,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	    size = model.neuronN[i] * model.neuronDelaySlots[i];
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "sT" << model.neuronName[i] << "=clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os << size << " * sizeof(" << model.ftype << "),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1224,7 +1213,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	    }
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << nModels[nt].varNames[j] + model.neuronName[i] << "=clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os << size << " * sizeof(" << nModels[nt].varTypes[j] << "),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1257,7 +1246,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	size = model.neuronN[model.synapseTarget[i]];
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << model.synapseName[i] << "=clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os << size << " * sizeof(" << model.ftype << "),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1283,7 +1272,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	    size = (model.neuronN[model.synapseSource[i]] * model.neuronN[model.synapseTarget[i]]) / 32 + 1;
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << model.synapseName[i] << "=clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os << size << " * sizeof(uint_32),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1313,7 +1302,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	    for (int k= 0, l= weightUpdateModels[st].varNames.size(); k < l; k++) {
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << weightUpdateModels[st].varNames[k] << model.synapseName[i] << "=clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os << size << " * sizeof(" << weightUpdateModels[st].varTypes[k] << "),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1343,7 +1332,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	    for (int k= 0, l= postSynModels[pst].varNames.size(); k < l; k++) {
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << postSynModels[pst].varNames[k] + model.synapseName[i] << "=clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os << size << " * sizeof(" << postSynModels[pst].varTypes[k] << "),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1399,18 +1388,19 @@ void CLgenRunner(NNmodel &model, //!< Model description
 
 	if (model.neuronDelaySlots[i] > 1) {
 	    os << "    spkQuePtr" << model.neuronName[i] << " = 0;" << ENDL;
-#ifndef CPU_ONLY				//check later
-	#ifdef OPENCL
-		os << "CHECK_OPENCL_ERRORS()"
+#ifndef CPU_ONLY							////////check later
+	#ifndef OPENCL
+	//	os << "CHECK_OPENCL_ERRORS()";
 	
 	#else
 	    os << "CHECK_CUDA_ERRORS(cudaMemcpyToSymbol(dd_spkQuePtr" << model.neuronName[i];
 	    os << ", &spkQuePtr" << model.neuronName[i];
 	    os << ", " << "sizeof(unsigned int), 0, cudaMemcpyHostToDevice));" << ENDL;	
+	
 	#endif
 #endif
 	}
-
+	
 	if ((model.neuronNeedTrueSpk[i]) && (model.neuronDelaySlots[i] > 1)) {
 	    os << "    for (int i = 0; i < " << model.neuronDelaySlots[i] << "; i++) {" << ENDL;
 	    os << "        glbSpkCnt" << model.neuronName[i] << "[i] = 0;" << ENDL;
@@ -1472,7 +1462,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	}
     }
     os << ENDL;
-
+	
     // INITIALISE SYNAPSE VARIABLES
     os << "    // synapse variables" << ENDL;
     for (int i = 0; i < model.synapseGrpN; i++) {
@@ -1525,7 +1515,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
  	    size = model.neuronN[model.synapseSource[i]] + 1;
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << model.synapseName[i] << ".indInG = clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os << size << " * sizeof(unsigned int),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1539,7 +1529,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 #endif
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << model.synapseName[i] << ".ind = clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os << "connN * sizeof(unsigned int),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1554,7 +1544,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	    if (model.synapseUsesSynapseDynamics[i]) {
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << model.synapseName[i] << ".preInd = clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os <<  " connN * sizeof(unsigned int),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1573,7 +1563,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 		size = model.neuronN[model.synapseTarget[i]] + 1;
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << model.synapseName[i] << ".revIndInG = clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os << size << "  * sizeof(unsigned int),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1586,7 +1576,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 #endif
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << model.synapseName[i] << ".revInd = clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os <<  " connN * sizeof(unsigned int),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1599,7 +1589,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 #endif
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << model.synapseName[i] << ".remap = clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os <<  " connN * sizeof(unsigned int),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1621,7 +1611,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	    for (int k= 0, l= weightUpdateModels[st].varNames.size(); k < l; k++) {
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << model.synapseName[i] << ".remap = clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os <<  " connN * sizeof(unsigned int),NULL,&err);" << ENDL;						//check if the second last argument NULL or not   and declare cl_int err at apporpriate place 
 		os << "CHECK_OPENCL_ERRORS(err);"<<ENDL;
@@ -1636,7 +1626,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 
 	    }
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "// Allocate device side variables" << ENDL;
 	    os << "dd_indInG" << model.synapseName[i] << " = clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
 		os <<  " sizeof(unsigned int) * ("<< model.neuronN[model.synapseSource[i]] + 1  <<") ,NULL,&err);" << ENDL;	
@@ -1780,7 +1770,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	nt = model.neuronType[i];
 
 #ifndef CPU_ONLY	
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(glbSpkCnt" << model.neuronName[i] << "));" << ENDL;
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(d_glbSpkCnt" << model.neuronName[i] << "));" << ENDL;
 	#else
@@ -1792,7 +1782,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 #endif
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(glbSpk" << model.neuronName[i] << "));" << ENDL;
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(d_glbSpk" << model.neuronName[i] << "));" << ENDL;
 	#else
@@ -1806,7 +1796,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	if (model.neuronNeedSpkEvnt[i]) {
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(glbSpkCntEvnt" << model.neuronName[i] << "));" << ENDL;
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(d_glbSpkCntEvnt" << model.neuronName[i] << "));" << ENDL;
 	#else
@@ -1818,7 +1808,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 #endif
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(glbSpkEvnt" << model.neuronName[i] << "));" << ENDL;
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(d_glbSpkEvnt" << model.neuronName[i] << "));" << ENDL;
 	#else
@@ -1833,7 +1823,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	if (model.neuronNeedSt[i]) {
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(sT" << model.neuronName[i] << "));" << ENDL;
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(d_sT" << model.neuronName[i] << "));" << ENDL;
 	#else
@@ -1848,7 +1838,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	for (int k= 0, l= nModels[nt].varNames.size(); k < l; k++) {
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(" << nModels[nt].varNames[k] << model.neuronName[i] << "));" << ENDL;
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(d_" << nModels[nt].varNames[k] << model.neuronName[i] << "));" << ENDL;
 	#else
@@ -1868,7 +1858,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	pst = model.postSynapseType[i];
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(inSyn" << model.synapseName[i] << "));" << ENDL;
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(d_inSyn" << model.synapseName[i] << "));" << ENDL;
 	#else
@@ -1883,7 +1873,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	    os << "    C" << model.synapseName[i] << ".connN= 0;" << ENDL;
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(C" << model.synapseName[i] << ".indInG));" << ENDL;
 	#else
 	    os << "cudaFreeHost(C" << model.synapseName[i] << ".indInG);" << ENDL;
@@ -1893,7 +1883,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 #endif
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(C" << model.synapseName[i] << ".ind));" << ENDL;
 	#else
 	    os << "cudaFreeHost(C" << model.synapseName[i] << ".ind);" << ENDL;
@@ -1905,7 +1895,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	    if (model.synapseUsesPostLearning[i]) {
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(C" << model.synapseName[i] << ".revIndInG));" << ENDL;
 	#else
 		os << "cudaFreeHost(C" << model.synapseName[i] << ".revIndInG);" << ENDL;
@@ -1915,7 +1905,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 #endif
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(C" << model.synapseName[i] << ".revInd));" << ENDL;
 	#else
 		os << "cudaFreeHost(C" << model.synapseName[i] << ".revInd);" << ENDL;
@@ -1925,7 +1915,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 #endif
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(C" << model.synapseName[i] << ".remap));" << ENDL;
 	#else
 		os << "cudaFreeHost(C" << model.synapseName[i] << ".remap);" << ENDL;
@@ -1939,7 +1929,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	if (model.synapseGType[i] == INDIVIDUALID) {
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(gp" << model.synapseName[i] << "));" << ENDL;
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(d_gp" << model.synapseName[i] << "));" << ENDL;
 	#else
@@ -1955,7 +1945,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	    for (int k= 0, l= weightUpdateModels[st].varNames.size(); k < l; k++) {
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(" << weightUpdateModels[st].varNames[k] << model.synapseName[i] << "));" << ENDL;
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(d_" << weightUpdateModels[st].varNames[k] << model.synapseName[i] << "));" << ENDL;
 	#else
@@ -1970,7 +1960,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	    for (int k= 0, l= postSynModels[pst].varNames.size(); k < l; k++) {
 
 #ifndef CPU_ONLY
-	#ifdef OPENCL
+	#ifndef OPENCL
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(" << postSynModels[pst].varNames[k] << model.synapseName[i] << "));" << ENDL;
 		os << "CHECK_OPENCL_ERRORS(clReleaseMemObject(d_" << postSynModels[pst].varNames[k] << model.synapseName[i] << "));" << ENDL;
 	#else
@@ -2076,7 +2066,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 #ifndef CPU_ONLY
 
 
-	#ifdef OPENCL
+	#ifndef OPENCL
 		void genRunnerGPU(NNmodel &model, //!< Model description 
 		  string &path //!< Path for code generation
 		)
@@ -2098,10 +2088,12 @@ void CLgenRunner(NNmodel &model, //!< Model description
     os << "*/" << ENDL;
     os << "//-------------------------------------------------------------------------" << ENDL << ENDL;
     os << ENDL;
-							// check for version issues
+	os << "#define ulong unsigned long" << ENDL;
+							//////////////// check for version issues
 	os << "#pragma OPENCL EXTENSION cl_khr_fp64: enable"<<ENDL;
 	os << "#pragma OPENCL EXTENSION cl_khr_int64_base_atomics: enable"<<ENDL;
-	os << "void AtomicAdd(__global double *val, double delta) { "<<ENDL;
+//	os << "void AtomicAdd(__global double *val, double delta) { "<<ENDL;				////////// __global why error?
+	os << "void AtomicAdd(double *val, double delta) { "<<ENDL;
 	os << "		 union {"<<ENDL;
     os << "		 double f;"<<ENDL;
     os << "		 ulong  i;"<<ENDL;
@@ -2109,11 +2101,12 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	os << "		union {"<<ENDL;
     os << "	 	 double f;"<<ENDL;
     os << "		 ulong  i;"<<ENDL;
-	os << "		} new;"<<ENDL;
+	os << "		} new1;"<<ENDL;
 	os << "		do {"<<ENDL;
 	os << "		old.f = *val;"<<ENDL;
-	os << "		new.f = old.f + delta; "<<ENDL;
-	os << "		} while (atom_cmpxchg((volatile __global ulong *)val, old.i, new.i) != old.i);"<<ENDL;
+	os << "		new1.f = old.f + delta; "<<ENDL;
+//	os << "		} while (atomic_cmpxchg((volatile __global ulong *)val, old.i, new1.i) != old.i);"<<ENDL;
+	os << "		} while (atomic_cmpxchg((volatile  ulong *)val, old.i, new1.i) != old.i);"<<ENDL;	
 	os << "	} "<<ENDL;
 
 	
@@ -2234,7 +2227,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 		
 		os << "CHECK_OPENCL_ERRORS(clEnqueueWriteBuffer(command_queue, d_glbSpk" << model.neuronName[i];
 		os << "+(spkQuePtr" << model.neuronName[i] << "*" << model.neuronN[i] << ")";
-		os << ", CL_TRUE, 0, " << "glbSpkCnt" << model.neuronName[i] << "[spkQuePtr" << model.neuronName[i] << "] * sizeof(unsigned int))";
+		os << ", CL_TRUE, 0, " << "glbSpkCnt" << model.neuronName[i] << "[spkQuePtr" << model.neuronName[i] << "] * sizeof(unsigned int)";
 		os << ", glbSpk" << model.neuronName[i] << "+(spkQuePtr" << model.neuronName[i] << "*" << model.neuronN[i] << ")" << ",0, NULL, NULL ));" << ENDL;
 	  
 
@@ -2812,7 +2805,345 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	os << "dim3 nGlovbalSize = " << sqGridSize * neuronBlkSz << ","<< sqGridSize <<");" << ENDL;
     }
     os << ENDL;
-																			// check if(model.timing)...event
+	
+
+	//setting kernel arguments
+	
+	int param_count;
+	
+	
+	 if (model.synapseGrpN > 0) {
+	if (model.synDynGroups > 0) {
+	   
+	    
+	// setting kernel arguments for calcSynapseDynamics
+	param_count = 0;
+	os << "// ------------------------------------------------------------------------" << ENDL;
+    os << "// neuron variables" << ENDL;
+    os << ENDL;
+	
+	for (int i= 0, l= model.synapseKernelParameters.size(); i < l; i++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapseDynamics, " << param_count++ << ", sizeof(cl_mem), &" << model.synapseKernelParameters[i] <<"));" << ENDL;
+	
+	
+	}
+	
+	
+	for (int i = 0; i < model.neuronGrpN; i++) {
+	nt = model.neuronType[i];
+
+	os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapseDynamics, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpkCnt" << model.neuronName[i] <<"));" << ENDL;
+	os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapseDynamics, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpk" << model.neuronName[i] <<"));" << ENDL;
+	
+	
+	if (model.neuronNeedSpkEvnt[i]) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapseDynamics, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpkCntEvnt" << model.neuronName[i] <<"));" << ENDL;
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapseDynamics, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpkEvnt" << model.neuronName[i] <<"));" << ENDL;
+	   
+	}
+	if (model.neuronDelaySlots[i] > 1) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapseDynamics, " << param_count++ << ", sizeof(cl_mem), &dd_spkQuePtr" << model.neuronName[i] <<"));" << ENDL;		//single variable change to variable[0] in kernel
+	    
+	}
+	if (model.neuronNeedSt[i]) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapseDynamics, " << param_count++ << ", sizeof(cl_mem), &dd_sT" << model.neuronName[i] <<"));" << ENDL;
+
+	}
+
+    }
+	
+	
+	
+    os << "// ------------------------------------------------------------------------" << ENDL;
+    os << "// synapse variables" << ENDL;
+    os << ENDL;
+
+    for (int i = 0; i < model.synapseGrpN; i++) {
+	st = model.synapseType[i];
+	pst = model.postSynapseType[i];
+
+	os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapseDynamics, " << param_count++ << ", sizeof(cl_mem), &dd_inSyn" << model.neuronName[i] <<"));" << ENDL;
+	
+	if (model.synapseGType[i] == INDIVIDUALID) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapseDynamics, " << param_count++ << ", sizeof(cl_mem), &dd_gp" << model.neuronName[i] <<"));" << ENDL;
+	   
+	}
+	if (model.synapseConnType[i] == SPARSE) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapseDynamics, " << param_count++ << ", sizeof(cl_mem), &dd_C" << model.neuronName[i] <<"));" << ENDL;
+//	    os << "extern SparseProjection C" << model.synapseName[i] << ";" << ENDL;
+	}
+	if (model.synapseGType[i] == INDIVIDUALG) { // not needed for GLOBALG, INDIVIDUALID
+	    for (int k = 0, l = weightUpdateModels[st].varNames.size(); k < l; k++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapseDynamics, " << param_count++ << ", sizeof(cl_mem), &dd_" << weightUpdateModels[st].varNames[k] << model.neuronName[i] <<"));" << ENDL;
+	
+	    }
+	    for (int k = 0, l = postSynModels[pst].varNames.size(); k < l; k++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapseDynamics, " << param_count++ << ", sizeof(cl_mem), &dd_" << postSynModels[pst].varNames[k] << model.neuronName[i] <<"));" << ENDL;
+		
+	    }
+	}
+	for (int k = 0, l= weightUpdateModels[st].extraGlobalSynapseKernelParameters.size(); k < l; k++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapseDynamics, " << param_count++ << ", sizeof(cl_mem), &dd_" << weightUpdateModels[st].extraGlobalSynapseKernelParameters[k] << model.neuronName[i] <<"));" << ENDL;
+		
+	   	}		
+    }
+    os << ENDL;
+
+		
+	  
+	}
+	
+	   
+	    
+	// setting kernel arguments for calcSynapses
+	param_count = 0;
+	os << "// ------------------------------------------------------------------------" << ENDL;
+    os << "// neuron variables" << ENDL;
+    os << ENDL;
+	
+	for (int i= 0, l= model.synapseKernelParameters.size(); i < l; i++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapses, " << (param_count++) << ", sizeof(cl_mem), &" << model.synapseKernelParameters[i] <<"));" << ENDL;
+	    
+	}
+	
+	for (int i = 0; i < model.neuronGrpN; i++) {
+	nt = model.neuronType[i];
+
+	os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapses, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpkCnt" << model.neuronName[i] <<"));" << ENDL;
+	os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapses, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpk" << model.neuronName[i] <<"));" << ENDL;
+	
+	
+	if (model.neuronNeedSpkEvnt[i]) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapses, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpkCntEvnt" << model.neuronName[i] <<"));" << ENDL;
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapses, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpkEvnt" << model.neuronName[i] <<"));" << ENDL;
+	   
+	}
+	if (model.neuronDelaySlots[i] > 1) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapses, " << param_count++ << ", sizeof(cl_mem), &dd_spkQuePtr" << model.neuronName[i] <<"));" << ENDL;		//single variable change to variable[0] in kernel
+	    
+	}
+	if (model.neuronNeedSt[i]) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapses, " << param_count++ << ", sizeof(cl_mem), &dd_sT" << model.neuronName[i] <<"));" << ENDL;
+
+	}
+
+    }
+	
+	
+	
+    os << "// ------------------------------------------------------------------------" << ENDL;
+    os << "// synapse variables" << ENDL;
+    os << ENDL;
+
+    for (int i = 0; i < model.synapseGrpN; i++) {
+	st = model.synapseType[i];
+	pst = model.postSynapseType[i];
+
+	os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapses, " << param_count++ << ", sizeof(cl_mem), &dd_inSyn" << model.neuronName[i] <<"));" << ENDL;
+	
+	if (model.synapseGType[i] == INDIVIDUALID) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapses, " << param_count++ << ", sizeof(cl_mem), &dd_gp" << model.neuronName[i] <<"));" << ENDL;
+	   
+	}
+	if (model.synapseConnType[i] == SPARSE) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapses, " << param_count++ << ", sizeof(cl_mem), &dd_C" << model.neuronName[i] <<"));" << ENDL;
+//	    os << "extern SparseProjection C" << model.synapseName[i] << ";" << ENDL;
+	}
+	if (model.synapseGType[i] == INDIVIDUALG) { // not needed for GLOBALG, INDIVIDUALID
+	    for (int k = 0, l = weightUpdateModels[st].varNames.size(); k < l; k++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapses, " << param_count++ << ", sizeof(cl_mem), &dd_" << weightUpdateModels[st].varNames[k] << model.neuronName[i] <<"));" << ENDL;
+	
+	    }
+	    for (int k = 0, l = postSynModels[pst].varNames.size(); k < l; k++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapses, " << param_count++ << ", sizeof(cl_mem), &dd_" << postSynModels[pst].varNames[k] << model.neuronName[i] <<"));" << ENDL;
+		
+	    }
+	}
+	for (int k = 0, l= weightUpdateModels[st].extraGlobalSynapseKernelParameters.size(); k < l; k++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcSynapses, " << param_count++ << ", sizeof(cl_mem), &dd_" << weightUpdateModels[st].extraGlobalSynapseKernelParameters[k] << model.neuronName[i] <<"));" << ENDL;
+		
+	   	}		
+    }
+    os << ENDL;
+
+		
+	
+	
+	
+	
+	if (model.lrnGroups > 0) {
+	    
+	  
+	    // setting kernel arguments for learnSynapsesPost
+	param_count = 0;
+	os << "// ------------------------------------------------------------------------" << ENDL;
+    os << "// neuron variables" << ENDL;
+    os << ENDL;
+	
+	for (int i= 0, l= model.simLearnPostKernelParameters.size(); i < l; i++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(learnSynapsesPost, " << param_count++ << ", sizeof(cl_mem), &" << model.simLearnPostKernelParameters[i] <<"));" << ENDL;
+	
+	}
+	
+	for (int i = 0; i < model.neuronGrpN; i++) {
+	nt = model.neuronType[i];
+
+	os << "CHECK_OPENCL_ERRORS(clSetKernelArg(learnSynapsesPost, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpkCnt" << model.neuronName[i] <<"));" << ENDL;
+	os << "CHECK_OPENCL_ERRORS(clSetKernelArg(learnSynapsesPost, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpk" << model.neuronName[i] <<"));" << ENDL;
+	
+	
+	if (model.neuronNeedSpkEvnt[i]) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(learnSynapsesPost, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpkCntEvnt" << model.neuronName[i] <<"));" << ENDL;
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(learnSynapsesPost, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpkEvnt" << model.neuronName[i] <<"));" << ENDL;
+	   
+	}
+	if (model.neuronDelaySlots[i] > 1) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(learnSynapsesPost, " << param_count++ << ", sizeof(cl_mem), &dd_spkQuePtr" << model.neuronName[i] <<"));" << ENDL;		//single variable change to variable[0] in kernel
+	    
+	}
+	if (model.neuronNeedSt[i]) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(learnSynapsesPost, " << param_count++ << ", sizeof(cl_mem), &dd_sT" << model.neuronName[i] <<"));" << ENDL;
+
+	}
+
+    }
+	
+	
+	
+    os << "// ------------------------------------------------------------------------" << ENDL;
+    os << "// synapse variables" << ENDL;
+    os << ENDL;
+
+    for (int i = 0; i < model.synapseGrpN; i++) {
+	st = model.synapseType[i];
+	pst = model.postSynapseType[i];
+
+	os << "CHECK_OPENCL_ERRORS(clSetKernelArg(learnSynapsesPost, " << param_count++ << ", sizeof(cl_mem), &dd_inSyn" << model.neuronName[i] <<"));" << ENDL;
+	
+	if (model.synapseGType[i] == INDIVIDUALID) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(learnSynapsesPost, " << param_count++ << ", sizeof(cl_mem), &dd_gp" << model.neuronName[i] <<"));" << ENDL;
+	   
+	}
+	if (model.synapseConnType[i] == SPARSE) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(learnSynapsesPost, " << param_count++ << ", sizeof(cl_mem), &dd_C" << model.neuronName[i] <<"));" << ENDL;
+//	    os << "extern SparseProjection C" << model.synapseName[i] << ";" << ENDL;
+	}
+	if (model.synapseGType[i] == INDIVIDUALG) { // not needed for GLOBALG, INDIVIDUALID
+	    for (int k = 0, l = weightUpdateModels[st].varNames.size(); k < l; k++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(learnSynapsesPost, " << param_count++ << ", sizeof(cl_mem), &dd_" << weightUpdateModels[st].varNames[k] << model.neuronName[i] <<"));" << ENDL;
+	
+	    }
+	    for (int k = 0, l = postSynModels[pst].varNames.size(); k < l; k++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(learnSynapsesPost, " << param_count++ << ", sizeof(cl_mem), &dd_" << postSynModels[pst].varNames[k] << model.neuronName[i] <<"));" << ENDL;
+		
+	    }
+	}
+	for (int k = 0, l= weightUpdateModels[st].extraGlobalSynapseKernelParameters.size(); k < l; k++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(learnSynapsesPost, " << param_count++ << ", sizeof(cl_mem), &dd_" << weightUpdateModels[st].extraGlobalSynapseKernelParameters[k] << model.neuronName[i] <<"));" << ENDL;
+		
+	   	}		
+    }
+    os << ENDL;
+	
+	}
+    }    
+    
+	
+	
+	
+	
+	//parameters for calcNeurons
+	param_count = 0;
+	os << "// ------------------------------------------------------------------------" << ENDL;
+    os << "// neuron variables" << ENDL;
+    os << ENDL;
+	
+	for (int i= 0, l= model.neuronKernelParameters.size(); i < l; i++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &" << model.neuronKernelParameters[i] <<"));" << ENDL;
+			
+    }
+	
+	for (int i = 0; i < model.neuronGrpN; i++) {
+	nt = model.neuronType[i];
+
+	os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpkCnt" << model.neuronName[i] <<"));" << ENDL;
+	os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpk" << model.neuronName[i] <<"));" << ENDL;
+	
+	
+	if (model.neuronNeedSpkEvnt[i]) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpkCntEvnt" << model.neuronName[i] <<"));" << ENDL;
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_glbSpkEvnt" << model.neuronName[i] <<"));" << ENDL;
+	   
+	}
+	if (model.neuronDelaySlots[i] > 1) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_spkQuePtr" << model.neuronName[i] <<"));" << ENDL;		//single variable change to variable[0] in kernel
+	    
+	}
+	if (model.neuronNeedSt[i]) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_sT" << model.neuronName[i] <<"));" << ENDL;
+
+	}
+	for (int k = 0, l= nModels[nt].varNames.size(); k < l; k++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_" << nModels[nt].varNames[k] << model.neuronName[i] <<"));" << ENDL;
+	//    extern_variable_def(os, nModels[nt].varTypes[k]+" *", nModels[nt].varNames[k]+model.neuronName[i]);
+	}
+	for (int k = 0, l= nModels[nt].extraGlobalNeuronKernelParameters.size(); k < l; k++) {
+	
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_" << nModels[nt].extraGlobalNeuronKernelParameters[k] << model.neuronName[i] <<"));" << ENDL;
+	//    extern_variable_def(os, nModels[nt].extraGlobalNeuronKernelParameterTypes[k], nModels[nt].extraGlobalNeuronKernelParameters[k]+model.neuronName[i]);
+	}	
+    }
+	
+	
+	
+    os << "// ------------------------------------------------------------------------" << ENDL;
+    os << "// synapse variables" << ENDL;
+    os << ENDL;
+
+    for (int i = 0; i < model.synapseGrpN; i++) {
+	st = model.synapseType[i];
+	pst = model.postSynapseType[i];
+
+	os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_inSyn" << model.neuronName[i] <<"));" << ENDL;
+	
+	if (model.synapseGType[i] == INDIVIDUALID) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_gp" << model.neuronName[i] <<"));" << ENDL;
+	   
+	}
+	if (model.synapseConnType[i] == SPARSE) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_C" << model.neuronName[i] <<"));" << ENDL;
+//	    os << "extern SparseProjection C" << model.synapseName[i] << ";" << ENDL;
+	}
+	if (model.synapseGType[i] == INDIVIDUALG) { // not needed for GLOBALG, INDIVIDUALID
+	    for (int k = 0, l = weightUpdateModels[st].varNames.size(); k < l; k++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_" << weightUpdateModels[st].varNames[k] << model.neuronName[i] <<"));" << ENDL;
+	
+	    }
+	    for (int k = 0, l = postSynModels[pst].varNames.size(); k < l; k++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_" << postSynModels[pst].varNames[k] << model.neuronName[i] <<"));" << ENDL;
+		
+	    }
+	}
+	for (int k = 0, l= weightUpdateModels[st].extraGlobalSynapseKernelParameters.size(); k < l; k++) {
+		os << "CHECK_OPENCL_ERRORS(clSetKernelArg(calcNeurons, " << param_count++ << ", sizeof(cl_mem), &dd_" << weightUpdateModels[st].extraGlobalSynapseKernelParameters[k] << model.neuronName[i] <<"));" << ENDL;
+		
+	   	}		
+    }
+    os << ENDL;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+	// check if(model.timing)...event
     if (model.synapseGrpN > 0) {
 	if (model.synDynGroups > 0) {
 	    if (model.timing) os << "cudaEventRecord(synDynStart);" << ENDL;
@@ -2849,10 +3180,14 @@ void CLgenRunner(NNmodel &model, //!< Model description
     if (model.timing) os << "cudaEventRecord(neuronStart);" << ENDL;
 		os << "CHECK_OPENCL_ERRORS(clEnqueueNDRangeKernel(command_queue,calcNeurons,1, NULL, &nGlobalSize , &nLocalSize, 0, NULL, &learningevent));"<< ENDL;
   // os << "calcNeurons <<< nGrid, nThreads >>> (";
-    for (int i= 0, l= model.neuronKernelParameters.size(); i < l; i++) {
-/*	os << model.neuronKernelParameters[i] << ", ";
+/*    for (int i= 0, l= model.neuronKernelParameters.size(); i < l; i++) {
+	os << model.neuronKernelParameters[i] << ", ";
     }
     os << "t);" << ENDL;*/
+	 os << "iT++;" << ENDL;
+    os << "t= iT*DT;" << ENDL;
+    os << CB(1130) << ENDL;
+    os.close();
  /*   if (model.timing) {
 	os << "cudaEventRecord(neuronStop);" << ENDL;
 	os << "cudaEventSynchronize(neuronStop);" << ENDL;
@@ -2872,10 +3207,7 @@ void CLgenRunner(NNmodel &model, //!< Model description
 	os << "cudaEventElapsedTime(&tmp, neuronStart, neuronStop);" << ENDL;
 	os << "neuron_tme+= tmp/1000.0;" << ENDL;
     }*/
-    os << "iT++;" << ENDL;
-    os << "t= iT*DT;" << ENDL;
-    os << CB(1130) << ENDL;
-    os.close();
+   
     //cout << "done with generating GPU runner" << ENDL;
 }
 	
