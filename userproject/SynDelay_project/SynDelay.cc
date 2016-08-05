@@ -22,7 +22,8 @@ void modelDefinition(NNmodel &model)
 #else
     GENN_PREFERENCES::optimizeCode = true;
 #endif // DEBUG
-
+	
+	
     model.setName("SynDelay");
     model.setDT(1.0);
     model.setPrecision(GENN_FLOAT);

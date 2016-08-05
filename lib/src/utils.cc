@@ -32,7 +32,7 @@
 /*! \brief Function for getting the capabilities of a CUDA device via the driver API.
  */
 //--------------------------------------------------------------------------
-
+#ifdef OPENCL
 CUresult cudaFuncGetAttributesDriver(cudaFuncAttributes *attr, CUfunction kern) {
     int tmp;
     CHECK_CU_ERRORS(cuFuncGetAttribute(&tmp, CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK, kern));
@@ -73,7 +73,7 @@ CUresult cudaFuncGetAttributesDriver(cudaFuncAttributes *attr, CUfunction kern) 
     return CUDA_SUCCESS;
 }
 #endif
-
+#endif
 
 //--------------------------------------------------------------------------
 /*! \brief Function called upon the detection of an error. Outputs an error message and then exits.

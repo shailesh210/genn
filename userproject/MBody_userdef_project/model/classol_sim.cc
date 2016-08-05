@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 	    //pullDNStateFromDevice();
     
 #ifdef TIMING
-	    fprintf(timeros, "%f %f %f \n", neuron_tme, synapse_tme, learning_tme);
+	//    fprintf(timeros, "%f %f %f \n", neuron_tme, synapse_tme, learning_tme);
 #endif 
 
 	    locust.sum_spikes();
@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
 	    locust.runCPU(DT); // run next batch
 
 #ifdef TIMING
-	    fprintf(timeros, "%f %f %f \n", neuron_tme, synapse_tme, learning_tme);
+	 //   fprintf(timeros, "%f %f %f \n", neuron_tme, synapse_tme, learning_tme);
 #endif 
 
 	    locust.sum_spikes();

@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include<conio.h>
 
 using namespace std;
 
@@ -29,8 +30,14 @@ using namespace std;
 SynDelay::SynDelay(bool usingGPU)
 {
   this->usingGPU = usingGPU;
-  allocateMem();
+  allocateMem();	
+  #ifndef OPENCL 
+	copyStateToDevice();
+  #endif 
   initialize();
+  #ifndef OPENCL 
+	unmap_copyStateToDevice();
+  #endif 
 }
 
 SynDelay::~SynDelay()
@@ -43,8 +50,13 @@ void SynDelay::run(float t)
   if (usingGPU)
   {
 #ifndef CPU_ONLY
+          
     stepTimeGPU();
-    copyStateFromDevice();
+	#ifndef OPENCL
+		copyStateFromDevice();
+	#else
+		copyStateFromDevice();
+	#endif
 #endif // CPU_ONLY
   }
   else
@@ -70,10 +82,11 @@ int main(int argc, char *argv[])
   if (atoi(argv[1]) == 1)
   {
     cerr << "Cannot use GPU in a CPU_ONLY binary." << endl;
-    cerr << "Recompile without CPU_ONLY to run a GPU simulation." << endl;
+    cerr << "Recompile without CPU_ONLY to run a GPU simulation." << endl;	
     return EXIT_FAILURE;
   }
 #endif // CPU_ONLY  
+
 
   SynDelay *sim = new SynDelay(atoi(argv[1]));
   CStopWatch *timer = new CStopWatch();
@@ -93,31 +106,57 @@ int main(int argc, char *argv[])
   cout << "# REPORT_TIME " << REPORT_TIME << endl;
   cout << "# begin simulating on " << (atoi(argv[1]) ? "GPU" : "CPU") << endl;
   timer->startTimer();
-  for (int i = 0; i < (TOTAL_TIME / DT); i++)
-  {
+  
+  set_kernel_arguments();
+  
+  for (int j = 0; j < (TOTAL_TIME / DT); j++)
+//   for (int j = 0; j < 10; j++)
+   {
+	//  _getch();
+	//  cout<<j<<'\n';
     sim->run(t);
+	
     t += DT;
-
+	
+	
     fileV << t
 	  << " " << VInput[0]
 	  << " " << VInter[0]
 	  << " " << VOutput[0]
 	  << endl;
-
-    for (int i= 0; i < glbSpkCntInput[spkQuePtrInput]; i++) {
-	fileStInput << t << " " << glbSpkInput[glbSpkShiftInput+i] << endl;
+//cout<<"mickey1\n";
+//	cout<<"spkQuePtrInput[0] = " << spkQuePtrInput[0]<<'\n';
+//	cout << "glbSpkCntInput[spkQuePtrInput[0]]=" << glbSpkCntInput[spkQuePtrInput[0]] <<'\n';
+//	cout << "glbSpkShiftInput= " <<  glbSpkShiftInput <<'\n';
+//	cout<< " var = " << var[0]<<'\n';
+    for (int i= 0; i < glbSpkCntInput[0]; i++) {
+		
+//	cout << "glbSpkInput[glbSpkShiftInput]= " <<  glbSpkInput[glbSpkShiftInput+i]<<'\n';
+	fileStInput << t << " " << glbSpkInput[i] << endl;
     }
+//cout<<"mickey2\n";
+
+//	for (int i= 0; i < 500; i++) {
+//	fileStInput << t << " " << VInput[i] << endl;
+//    }
+ 
+ 
     for (int i= 0; i < glbSpkCntInter[0]; i++) {
 	fileStInter << t << " " << glbSpkInter[i] << endl;
     }
+//cout<<"mickey3\n";
     for (int i= 0; i < glbSpkCntOutput[0]; i++) {
 	fileStOutput << t << " " << glbSpkOutput[i] << endl;
     }
 
+//cout<<"mickey4\n";
     if ((int) t % (int) REPORT_TIME == 0)
     {
       cout << "time " << t << endl;
     }
+#ifndef OPENCL
+	unmap_copyStateFromDevice();	
+#endif
   }
   timer->stopTimer();
   cout << "# done in " << timer->getElapsedTime() << " seconds" << endl;
@@ -125,6 +164,7 @@ int main(int argc, char *argv[])
   fileTime.close();
   fileV.close();
 
+ 
   delete sim;
   delete timer;
   return EXIT_SUCCESS;

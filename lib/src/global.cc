@@ -45,7 +45,21 @@ namespace GENN_PREFERENCES {
     unsigned int synapseDynamicsBlockSize= 32;
     unsigned int autoRefractory= 1; //!< Flag for signalling whether spikes are only reported if thresholdCondition changes from false to true (autoRefractory == 1) or spikes are emitted whenever thresholdCondition is true no matter what.
 };
-
+/*
+#ifndef OPENCL
+	struct CLDeviceProp{
+		int MAX_WORK_GROUP_SIZE;							//maxThreadsPerBlock
+		unsigned long DEVICE_LOCAL_MEM_SIZE;						//sharedMemPerBlock
+		unsigned int DEVICE_MAX_COMPUTE_UNITS;					//multiProcessorCount
+		char DEVICE_NAME[1000];									//name
+		unsigned long DEVICE_GLOBAL_MEM_SIZE;					//totalGlobalMem
+		unsigned int REGISTERSS_PER_BLOCK;						//regsPerBlock
+		unsigned int MAX_WORK_UNITS_PER_COMPUTE_UNIT;			//maxThreadsPerMultiProcessor      CHECK THIS LATER	
+		int major;												//device version major
+		int minor;												//device version minor
+};
+#endif  //OPENCL
+*/
 // These will eventually go inside e.g. some HardwareConfig class. Putting them here meanwhile.
 int neuronBlkSz; //!< Global variable containing the GPU block size for the neuron kernel
 int synapseBlkSz; //!< Global variable containing the GPU block size for the synapse kernel
@@ -57,9 +71,21 @@ int synDynBlkSz; //!< Global variable containing the GPU block size for the syna
 //vector<int> neuronBlkSz; //!< Global vector containing the optimum neuron kernel block size for each device
 //vector<int> synDynBlkSz; //!< Global vector containing the optimum synapse dynamics kernel block size for each device
 #ifndef CPU_ONLY
-cudaDeviceProp *deviceProp;
-int theDevice; //!< Global variable containing the currently selected CUDA device's number
-int deviceCount; //!< Global variable containing the number of CUDA devices on this host
+	#ifndef OPENCL
+		CLDeviceProp *deviceProp;
+		int theDevice;		//!< Global variable containing the currently selected OPENCL device's number
+		int deviceCount;	//!< Global variable containing the number of OPENCL devices on this host
+		cl_device_id device_ids[100];		//array of device ids ; for now 100...try replace by num_of _devices
+		cl_platform_id platform_id;  //!< Global variables platform_id
+		cl_uint ret_num_platforms;			//!< Global variables number of platforms
+	
+	#else
+		cudaDeviceProp *deviceProp;
+		int theDevice; //!< Global variable containing the currently selected CUDA device's number
+		int deviceCount; //!< Global variable containing the number of CUDA devices on this host
+		
+			
+	#endif  // OPENCL
 #endif
 int hostCount; //!< Global variable containing the number of hosts within the local compute cluster
 

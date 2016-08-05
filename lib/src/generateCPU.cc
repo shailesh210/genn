@@ -73,7 +73,11 @@ void genNeuronFunction(NNmodel &model, //!< Model description
     for (int i = 0; i < model.neuronGrpN; i++) {
 	nt = model.neuronType[i];
 
-	string queueOffset = (model.neuronDelaySlots[i] > 1 ? "(spkQuePtr" + model.neuronName[i] + " * " + tS(model.neuronN[i]) + ") + " : "");
+	#ifndef OPENCL 
+		string queueOffset = (model.neuronDelaySlots[i] > 1 ? "(spkQuePtr" + model.neuronName[i] + "[0] * " + tS(model.neuronN[i]) + ") + " : "");
+	#else
+		string queueOffset = (model.neuronDelaySlots[i] > 1 ? "(spkQuePtr" + model.neuronName[i] + " * " + tS(model.neuronN[i]) + ") + " : "");
+	#endif
 	string queueOffsetTrueSpk = (model.neuronNeedTrueSpk[i] ? queueOffset : "");
 
 	os << "// neuron group " << model.neuronName[i] << ENDL;
@@ -81,13 +85,25 @@ void genNeuronFunction(NNmodel &model, //!< Model description
 
 	// increment spike queue pointer and reset spike count
 	if (model.neuronDelaySlots[i] > 1) { // with delay
-	    os << "spkQuePtr" << model.neuronName[i] << " = (spkQuePtr" << model.neuronName[i] << " + 1) % " << model.neuronDelaySlots[i] << ";" << ENDL;
+	#ifndef OPENCL 
+		os << "spkQuePtr" << model.neuronName[i] << "[0] = (spkQuePtr" << model.neuronName[i] << "[0] + 1) % " << model.neuronDelaySlots[i] << ";" << ENDL;
+	#else
+		os << "spkQuePtr" << model.neuronName[i] << " = (spkQuePtr" << model.neuronName[i] << " + 1) % " << model.neuronDelaySlots[i] << ";" << ENDL;
+	#endif
 	    if (model.neuronNeedSpkEvnt[i]) {
+	#ifndef OPENCL 
+		os << "glbSpkCntEvnt" << model.neuronName[i] << "[spkQuePtr" << model.neuronName[i] << "[0]] = 0;" << ENDL;
+	#else
 		os << "glbSpkCntEvnt" << model.neuronName[i] << "[spkQuePtr" << model.neuronName[i] << "] = 0;" << ENDL;
-	    }
+	#endif
+		 }
 	    if (model.neuronNeedTrueSpk[i]) {
+	#ifndef OPENCL 
+		os << "glbSpkCnt" << model.neuronName[i] << "[spkQuePtr" << model.neuronName[i] << "[0]] = 0;" << ENDL;
+	#else
 		os << "glbSpkCnt" << model.neuronName[i] << "[spkQuePtr" << model.neuronName[i] << "] = 0;" << ENDL;
-	    }
+	#endif
+			    }
 	    else {
 		os << "glbSpkCnt" << model.neuronName[i] << "[0] = 0;" << ENDL;
 	    }
@@ -100,8 +116,12 @@ void genNeuronFunction(NNmodel &model, //!< Model description
 	}
 	vector<bool> varNeedQueue = model.neuronVarNeedQueue[i];
 	if ((find(varNeedQueue.begin(), varNeedQueue.end(), true) != varNeedQueue.end()) && (model.neuronDelaySlots[i] > 1)) {
-	    os << "unsigned int delaySlot = (spkQuePtr" << model.neuronName[i];
-	    os << " + " << (model.neuronDelaySlots[i] - 1);
+	#ifndef OPENCL 
+		os << "unsigned int delaySlot = (spkQuePtr" << model.neuronName[i]<<"[0]";
+	#else
+		os << "unsigned int delaySlot = (spkQuePtr" << model.neuronName[i];
+	#endif
+	    	    os << " + " << (model.neuronDelaySlots[i] - 1);
 	    os << ") % " << model.neuronDelaySlots[i] << ";" << ENDL;
 	}
 	os << ENDL;
@@ -238,7 +258,12 @@ void genNeuronFunction(NNmodel &model, //!< Model description
 	    os << "if (" + eCode + ")" << OB(30);
 	    os << "glbSpkEvnt" << model.neuronName[i] << "[" << queueOffset << "glbSpkCntEvnt" << model.neuronName[i];
 	    if (model.neuronDelaySlots[i] > 1) { // WITH DELAY
-		os << "[spkQuePtr" << model.neuronName[i] << "]++] = n;" << ENDL;
+	    #ifndef OPENCL 
+			os << "[spkQuePtr" << model.neuronName[i] << "[0]]++] = n;" << ENDL;
+		#else
+			os << "[spkQuePtr" << model.neuronName[i] << "]++] = n;" << ENDL;
+		#endif
+		
 	    }
 	    else { // NO DELAY
 		os << "[0]++] = n;" << ENDL;
@@ -263,7 +288,12 @@ void genNeuronFunction(NNmodel &model, //!< Model description
 	    }
 	    os << "glbSpk" << model.neuronName[i] << "[" << queueOffsetTrueSpk << "glbSpkCnt" << model.neuronName[i];
 	    if ((model.neuronDelaySlots[i] > 1) && (model.neuronNeedTrueSpk[i])) { // WITH DELAY
-		os << "[spkQuePtr" << model.neuronName[i] << "]++] = n;" << ENDL;
+	    #ifndef OPENCL 
+			os << "[spkQuePtr" << model.neuronName[i] << "[0]]++] = n;" << ENDL;
+		#else
+			os << "[spkQuePtr" << model.neuronName[i] << "]++] = n;" << ENDL;
+		#endif
+		
 	    }
 	    else { // NO DELAY
 		os << "[0]++] = n;" << ENDL;
@@ -373,8 +403,13 @@ void generate_process_presynaptic_events_code_CPU(
 
 	unsigned int nt_post = model.neuronType[trg];
 	bool delayPost = model.neuronDelaySlots[trg] > 1;
-	string offsetPost = (delayPost ? "(spkQuePtr" + model.neuronName[trg] + " * " + tS(model.neuronN[trg]) + ") + " : "");
+	#ifndef OPENCL 
+			string offsetPost = (delayPost ? "(spkQuePtr" + model.neuronName[trg] + "[0] * " + tS(model.neuronN[trg]) + ") + " : "");
 
+	#else
+			string offsetPost = (delayPost ? "(spkQuePtr" + model.neuronName[trg] + " * " + tS(model.neuronN[trg]) + ") + " : "");
+	#endif
+	
 	// Detect spike events or spikes and do the update
 	os << "// process presynaptic events: " << (evnt ? "Spike type events" : "True Spikes") << ENDL;
 	if (delayPre) {
@@ -525,8 +560,14 @@ void genSynapseFunction(NNmodel &model, //!< Model description
 	bool delayPre = model.neuronDelaySlots[src] > 1;
 	bool delayPost = model.neuronDelaySlots[trg] > 1;
 	string offsetPre = (delayPre ? "(delaySlot * " + tS(model.neuronN[src]) + ") + " : "");
-	string offsetPost = (delayPost ? "(spkQuePtr" + model.neuronName[trg] +" * " + tS(model.neuronN[trg]) + ") + " : "");
-	
+	#ifndef OPENCL 
+			string offsetPost = (delayPost ? "(spkQuePtr" + model.neuronName[trg] +"[0] * " + tS(model.neuronN[trg]) + ") + " : "");
+
+	#else
+			string offsetPost = (delayPost ? "(spkQuePtr" + model.neuronName[trg] +" * " + tS(model.neuronN[trg]) + ") + " : "");
+
+	#endif
+		
 	// there is some internal synapse dynamics
 	if (weightUpdateModels[synt].synapseDynamics != tS("")) {
 
@@ -534,7 +575,11 @@ void genSynapseFunction(NNmodel &model, //!< Model description
 	    os << OB(1005);
 
 	    if (model.neuronDelaySlots[src] > 1) {
+	#ifndef OPENCL 
+		os << "unsigned int delaySlot = (spkQuePtr" << model.neuronName[src]<<"[0]";
+	#else
 		os << "unsigned int delaySlot = (spkQuePtr" << model.neuronName[src];
+	#endif
 		os << " + " << (model.neuronDelaySlots[src] - model.synapseDelay[k]);
 		os << ") % " << model.neuronDelaySlots[src] << ";" << ENDL;
 	    }
@@ -623,7 +668,11 @@ void genSynapseFunction(NNmodel &model, //!< Model description
 	os << OB(1006);
 
 	if (model.neuronDelaySlots[src] > 1) {
-	    os << "unsigned int delaySlot = (spkQuePtr" << model.neuronName[src];
+	#ifndef OPENCL 
+		os << "unsigned int delaySlot = (spkQuePtr" << model.neuronName[src]<<"[0]";
+	#else
+		os << "unsigned int delaySlot = (spkQuePtr" << model.neuronName[src];
+	#endif
 	    os << " + " << (model.neuronDelaySlots[src] - model.synapseDelay[i]);
 	    os << ") % " << model.neuronDelaySlots[src] << ";" << ENDL;
 	}
@@ -680,7 +729,11 @@ void genSynapseFunction(NNmodel &model, //!< Model description
 
 	    unsigned int nt_post = model.neuronType[trg];
 	    bool delayPost = model.neuronDelaySlots[trg] > 1;
-	    string offsetPost = (delayPost ? "(spkQuePtr" + model.neuronName[trg] + " * " + tS(model.neuronN[trg]) + ") + " : "");
+	    #ifndef OPENCL 
+	   		string offsetPost = (delayPost ? "(spkQuePtr" + model.neuronName[trg] + "[0] * " + tS(model.neuronN[trg]) + ") + " : "");
+	   	#else 
+	   		string offsetPost = (delayPost ? "(spkQuePtr" + model.neuronName[trg] + " * " + tS(model.neuronN[trg]) + ") + " : "");
+	   	#endif
 	    string offsetTrueSpkPost = (model.neuronNeedTrueSpk[trg] ? offsetPost : "");
 
 // NOTE: WE DO NOT USE THE AXONAL DELAY FOR BACKWARDS PROPAGATION - WE CAN TALK ABOUT BACKWARDS DELAYS IF WE WANT THEM
@@ -689,7 +742,12 @@ void genSynapseFunction(NNmodel &model, //!< Model description
 	    os << OB(950);
 
 	    if (delayPre) {
-		os << "unsigned int delaySlot = (spkQuePtr" << model.neuronName[src];
+	 	#ifndef OPENCL 
+			os << "unsigned int delaySlot = (spkQuePtr" << model.neuronName[src]<<"[0]";
+		#else
+			os << "unsigned int delaySlot = (spkQuePtr" << model.neuronName[src];
+		#endif
+	
 		os << " + " << (model.neuronDelaySlots[src] - model.synapseDelay[k]);
 		os << ") % " << model.neuronDelaySlots[src] << ";" << ENDL;
 	    }
@@ -699,7 +757,11 @@ void genSynapseFunction(NNmodel &model, //!< Model description
 	    }
 
 	    if (delayPost && model.neuronNeedTrueSpk[trg]) {
-		os << "for (ipost = 0; ipost < glbSpkCnt" << model.neuronName[trg] << "[spkQuePtr" << model.neuronName[trg] << "]; ipost++)" << OB(910);
+	    #ifndef OPENCL 
+			os << "for (ipost = 0; ipost < glbSpkCnt" << model.neuronName[trg] << "[spkQuePtr" << model.neuronName[trg] << "[0]]; ipost++)" << OB(910);
+	   	#else
+			os << "for (ipost = 0; ipost < glbSpkCnt" << model.neuronName[trg] << "[spkQuePtr" << model.neuronName[trg] << "]; ipost++)" << OB(910);
+		#endif
 	    }
 	    else {
 		os << "for (ipost = 0; ipost < glbSpkCnt" << model.neuronName[trg] << "[0]; ipost++)" << OB(910);

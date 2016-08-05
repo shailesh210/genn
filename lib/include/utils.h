@@ -23,10 +23,16 @@
 
 #include <iostream>
 #include <string>
+#include <conio.h>
+
 #ifndef CPU_ONLY
-#include <cuda.h>
-#include <cuda_runtime.h>
-#endif
+	#ifndef OPENCL
+		#include <CL/cl.h>
+	#else
+		#include <cuda.h>
+		#include <cuda_runtime.h>
+	#endif
+#endif	//CPU_ONLY
 
 using namespace std;
 
@@ -36,23 +42,38 @@ using namespace std;
 /*! \brief Macros for catching errors returned by the CUDA driver and runtime APIs.
  */
 //--------------------------------------------------------------------------
+#ifndef OPENCL
 
-#if CUDA_VERSION >= 6050
-#define CHECK_CU_ERRORS(call)					\
-  {								\
-    CUresult error = call;					\
-    if (error != CUDA_SUCCESS)					\
-      {								\
-	const char *errStr;					\
-	cuGetErrorName(error, &errStr);				\
-	cerr << __FILE__ << ": " <<  __LINE__;			\
-	cerr << ": cuda driver error " << error << ": ";	\
-	cerr << errStr << endl;					\
-	exit(EXIT_FAILURE);					\
-      }								\
-  }
+	#ifndef CHECK_CL_ERRORS
+	#define CHECK_CL_ERRORS(call){\
+		if(call != CL_SUCCESS)\
+								{\
+			cout << "Location : " << __FILE__ << ":" << __LINE__ << endl; \
+			_getch();\
+			exit(EXIT_FAILURE);\
+						}\
+		}
+	#endif
 #else
-#define CHECK_CU_ERRORS(call) call
+
+
+	#if CUDA_VERSION >= 6050
+	#define CHECK_CU_ERRORS(call)					\
+	{								\
+		CUresult error = call;					\
+		if (error != CUDA_SUCCESS)					\
+		{								\
+		const char *errStr;					\
+		cuGetErrorName(error, &errStr);				\
+		cerr << __FILE__ << ": " <<  __LINE__;			\
+		cerr << ": cuda driver error " << error << ": ";	\
+		cerr << errStr << endl;					\
+		exit(EXIT_FAILURE);					\
+		}								\
+	}
+	#else
+	#define CHECK_CU_ERRORS(call) call
+	#endif
 #endif
 
 // comment below and uncomment here when using CUDA that does not support cugetErrorName
@@ -88,8 +109,9 @@ using namespace std;
 /*! \brief Function for getting the capabilities of a CUDA device via the driver API.
  */
 //--------------------------------------------------------------------------
-
-CUresult cudaFuncGetAttributesDriver(cudaFuncAttributes *attr, CUfunction kern);
+#ifdef OPENCL
+	CUresult cudaFuncGetAttributesDriver(cudaFuncAttributes *attr, CUfunction kern);
+#endif
 #endif
 
 
