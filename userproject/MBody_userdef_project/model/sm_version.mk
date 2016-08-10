@@ -1,1 +1,0 @@
-NVCCFLAGS =$(NVCCFLAGS) -arch sm_12
