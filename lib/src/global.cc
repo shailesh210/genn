@@ -46,7 +46,7 @@ namespace GENN_PREFERENCES {
     unsigned int autoRefractory= 1; //!< Flag for signalling whether spikes are only reported if thresholdCondition changes from false to true (autoRefractory == 1) or spikes are emitted whenever thresholdCondition is true no matter what.
 };
 /*
-#ifndef OPENCL
+#ifdef OPENCL
 	struct CLDeviceProp{
 		int MAX_WORK_GROUP_SIZE;							//maxThreadsPerBlock
 		unsigned long DEVICE_LOCAL_MEM_SIZE;						//sharedMemPerBlock
@@ -71,7 +71,7 @@ int synDynBlkSz; //!< Global variable containing the GPU block size for the syna
 //vector<int> neuronBlkSz; //!< Global vector containing the optimum neuron kernel block size for each device
 //vector<int> synDynBlkSz; //!< Global vector containing the optimum synapse dynamics kernel block size for each device
 #ifndef CPU_ONLY
-	#ifndef OPENCL
+#ifdef OPENCL
 		CLDeviceProp *deviceProp;
 		int theDevice;		//!< Global variable containing the currently selected OPENCL device's number
 		int deviceCount;	//!< Global variable containing the number of OPENCL devices on this host
@@ -79,13 +79,12 @@ int synDynBlkSz; //!< Global variable containing the GPU block size for the syna
 		cl_platform_id platform_id;  //!< Global variables platform_id
 		cl_uint ret_num_platforms;			//!< Global variables number of platforms
 	
-	#else
+#else
 		cudaDeviceProp *deviceProp;
 		int theDevice; //!< Global variable containing the currently selected CUDA device's number
 		int deviceCount; //!< Global variable containing the number of CUDA devices on this host
 		
-			
-	#endif  // OPENCL
+#endif  // OPENCL
 #endif
 int hostCount; //!< Global variable containing the number of hosts within the local compute cluster
 

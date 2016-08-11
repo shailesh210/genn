@@ -840,15 +840,15 @@ void NNmodel::setSeed(unsigned int inseed /*!< the new seed  */)
 void NNmodel::setGPUDevice(int device)
 {
   int deviceCount;
-  #ifndef OPENCL
+#ifdef OPENCL
 	int ret_num_platforms;
 	cl_platform_id platform_id = NULL;
 	cl_device_id device_ids[100];
 	CHECK_CL_ERRORS(clGetPlatformIDs(1, &platform_id,(cl_uint *) &ret_num_platforms));
 	CHECK_CL_ERRORS(clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, device_ids, (cl_uint *)&deviceCount));
-  #else
+#else
 	CHECK_CUDA_ERRORS(cudaGetDeviceCount(&deviceCount));
-  #endif
+#endif
   assert(device >= -1);
   assert(device < deviceCount);
   if (device == -1) GENN_PREFERENCES::autoChooseDevice= 1;

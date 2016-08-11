@@ -32,9 +32,9 @@ The file includes separate files for generating kernels (generateKernels.cc), ge
 #include "stringUtils.h"
 #include "CodeHelper.h"
 
-#ifndef OPENCL
+#ifdef OPENCL
 #include <CL/cl.h>
-#include<CL/cl_ext.h>
+#include <CL/cl_ext.h>
 #endif
 #include <cmath>
 #ifdef _WIN32
@@ -46,7 +46,7 @@ The file includes separate files for generating kernels (generateKernels.cc), ge
 CodeHelper hlp;
 //hlp.setVerbose(true);//this will show the generation of bracketing (brace) levels. Helps to debug a bracketing issue
 
-#ifndef OPENCL
+#ifdef OPENCL
 //set device properties for opencl
 void get_device_properties(CLDeviceProp *deviceprop, int device_no)
 {
@@ -148,7 +148,7 @@ void chooseDevice(NNmodel &model, //!< the nn model we are generating code for
 		if (GENN_PREFERENCES::autoChooseDevice) {
 			for (theDevice = 0; theDevice < deviceCount; theDevice++) {
 
-#ifndef OPENCL
+#ifdef OPENCL
 				get_device_properties(deviceProp, theDevice);
 				//show_device_properties(deviceProp, device);
 				globalMem = deviceProp[theDevice].DEVICE_GLOBAL_MEM_SIZE;
@@ -221,7 +221,7 @@ int main(int argc,     //!< number of arguments; expected to be 2
 
 #ifndef CPU_ONLY
 
-#ifndef OPENCL
+#ifdef OPENCL
 	CHECK_CL_ERRORS(clGetPlatformIDs(1, &platform_id, &ret_num_platforms));
 	CHECK_CL_ERRORS(clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, device_ids, (cl_uint *)&deviceCount));
 	deviceProp = new CLDeviceProp[deviceCount];

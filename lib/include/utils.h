@@ -26,7 +26,7 @@
 #include <conio.h>
 
 #ifndef CPU_ONLY
-	#ifndef OPENCL
+	#ifdef OPENCL
 		#include <CL/cl.h>
 	#else
 		#include <cuda.h>
@@ -42,7 +42,7 @@ using namespace std;
 /*! \brief Macros for catching errors returned by the CUDA driver and runtime APIs.
  */
 //--------------------------------------------------------------------------
-#ifndef OPENCL
+#ifdef OPENCL
 
 	#ifndef CHECK_CL_ERRORS
 	#define CHECK_CL_ERRORS(call){\
@@ -109,7 +109,7 @@ using namespace std;
 /*! \brief Function for getting the capabilities of a CUDA device via the driver API.
  */
 //--------------------------------------------------------------------------
-#ifdef OPENCL
+#ifndef OPENCL // CUDA
 	CUresult cudaFuncGetAttributesDriver(cudaFuncAttributes *attr, CUfunction kern);
 #endif
 #endif

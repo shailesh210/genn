@@ -21,8 +21,12 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+
+#define OPENCL
+
+
 #ifndef CPU_ONLY
-	#ifndef OPENCL
+	#ifdef OPENCL
 		#include <CL/cl.h>
 	#else
 		#include <cuda.h>
@@ -53,7 +57,7 @@ namespace GENN_PREFERENCES {
     extern unsigned int autoRefractory; //!< Flag for signalling whether spikes are only reported if thresholdCondition changes from false to true (autoRefractory == 1) or spikes are emitted whenever thresholdCondition is true no matter what.
 };
 
-#ifndef OPENCL
+#ifdef OPENCL
 	struct CLDeviceProp{
 		int MAX_WORK_GROUP_SIZE;							//maxThreadsPerBlock
 		unsigned long DEVICE_LOCAL_MEM_SIZE;						//sharedMemPerBlock
@@ -79,7 +83,7 @@ extern int synDynBlkSz; //!< Global variable containing the GPU block size for t
 //extern vector<int> neuronBlkSz; //!< Global vector containing the optimum neuron kernel block size for each device
 //extern vector<int> synDynBlkSz; //!< Global vector containing the optimum synapse dynamics kernel block size for each device
 #ifndef CPU_ONLY
-	#ifndef OPENCL
+	#ifdef OPENCL
 		extern CLDeviceProp *deviceProp;
 		extern int theDevice;		//!< Global variable containing the currently selected OPENCL device's number
 		extern int deviceCount;	//!< Global variable containing the number of OPENCL devices on this host

@@ -32,7 +32,7 @@
 /*! \brief Function for getting the capabilities of a CUDA device via the driver API.
  */
 //--------------------------------------------------------------------------
-#ifdef OPENCL
+#ifndef OPENCL // CUDA
 CUresult cudaFuncGetAttributesDriver(cudaFuncAttributes *attr, CUfunction kern) {
     int tmp;
     CHECK_CU_ERRORS(cuFuncGetAttribute(&tmp, CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK, kern));
