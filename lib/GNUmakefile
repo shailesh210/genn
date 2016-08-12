@@ -17,70 +17,95 @@
 #-----------------------------------------------------------------
 
 # OS name (Linux or Darwin) and architecture (32 bit or 64 bit)
-OS_SIZE                  :=$(shell uname -m | sed -e "s/i.86/32/" -e "s/x86_64/64/" -e "s/armv7l/32/")
-OS_UPPER                 :=$(shell uname -s 2>/dev/null | tr [:lower:] [:upper:])
-OS_LOWER                 :=$(shell uname -s 2>/dev/null | tr [:upper:] [:lower:])
-DARWIN                   :=$(strip $(findstring DARWIN,$(OS_UPPER)))
+OS_SIZE                      :=$(shell uname -m | sed -e "s/i.86/32/" -e "s/x86_64/64/" -e "s/armv7l/32/")
+OS_UPPER                     :=$(shell uname -s 2>/dev/null | tr [:lower:] [:upper:])
+OS_LOWER                     :=$(shell uname -s 2>/dev/null | tr [:upper:] [:lower:])
+DARWIN                       :=$(strip $(findstring DARWIN,$(OS_UPPER)))
 
 # Source, Include, Object and Library directories
-SRC_PATH                 :=$(GENN_PATH)/lib/src
-INC_PATH                 :=$(GENN_PATH)/lib/include
-GENERATEALL_PATH         :=$(CURDIR)
-LIBGENN_PATH             :=$(GENN_PATH)/lib/lib
+SRC_PATH                     :=$(GENN_PATH)/lib/src
+INC_PATH                     :=$(GENN_PATH)/lib/include
+GENERATEALL_PATH             :=$(CURDIR)
+LIBGENN_PATH                 :=$(GENN_PATH)/lib/lib
 ifndef CPU_ONLY
-    LIBGENN_OBJ_PATH     :=$(GENN_PATH)/lib/obj
+    ifdef OPENCL
+        LIBGENN_OBJ_PATH     :=$(GENN_PATH)/lib/obj_OPENCL
+    else
+        LIBGENN_OBJ_PATH     :=$(GENN_PATH)/lib/obj
+    endif
 else
-    LIBGENN_OBJ_PATH     :=$(GENN_PATH)/lib/obj_CPU_ONLY
+    LIBGENN_OBJ_PATH         :=$(GENN_PATH)/lib/obj_CPU_ONLY
 endif
 
 # generateALL and libgenn.a targets
 ifndef CPU_ONLY
-    GENERATEALL          :=$(GENERATEALL_PATH)/generateALL
-    LIBGENN              :=$(LIBGENN_PATH)/libgenn.a
+    ifdef OPENCL
+        GENERATEALL          :=$(GENERATEALL_PATH)/generateALL_OPENCL
+        LIBGENN              :=$(LIBGENN_PATH)/libgenn_OPENCL.a
+    else
+        GENERATEALL          :=$(GENERATEALL_PATH)/generateALL
+        LIBGENN              :=$(LIBGENN_PATH)/libgenn.a
+    endif
 else
-    GENERATEALL          :=$(GENERATEALL_PATH)/generateALL_CPU_ONLY
-    LIBGENN              :=$(LIBGENN_PATH)/libgenn_CPU_ONLY.a
+    GENERATEALL              :=$(GENERATEALL_PATH)/generateALL_CPU_ONLY
+    LIBGENN                  :=$(LIBGENN_PATH)/libgenn_CPU_ONLY.a
 endif
-LIBGENN_OBJ              :=global.o modelSpec.o neuronModels.o synapseModels.o postSynapseModels.o utils.o stringUtils.o sparseUtils.o hr_time.o
-LIBGENN_OBJ              :=$(addprefix $(LIBGENN_OBJ_PATH)/,$(LIBGENN_OBJ))
+LIBGENN_OBJ                  :=global.o modelSpec.o neuronModels.o synapseModels.o postSynapseModels.o utils.o stringUtils.o sparseUtils.o hr_time.o
+LIBGENN_OBJ                  :=$(addprefix $(LIBGENN_OBJ_PATH)/,$(LIBGENN_OBJ))
 
 # Global CUDA compiler settings
 ifndef CPU_ONLY
-    CUDA_PATH            ?=/usr/local/cuda
-    NVCC                 :="$(CUDA_PATH)/bin/nvcc"
+    CUDA_PATH                ?=/usr/local/cuda
+    NVCC                     :="$(CUDA_PATH)/bin/nvcc"
 endif
 
 # Global C++ compiler settings
 ifeq ($(DARWIN),DARWIN)
-    CXX                  :=clang++
+    CXX                      :=clang++
 endif
 ifndef CPU_ONLY
-    CXXFLAGS             :=-std=c++11 -DNVCC=\"$(NVCC)\"
+    ifdef OPENCL
+        CXXFLAGS                 :=-std=c++11 -DOPENCL
+    else
+        CXXFLAGS                 :=-std=c++11 -DNVCC=\"$(NVCC)\"
+    endif
 else
-    CXXFLAGS             :=-std=c++11 -DCPU_ONLY
+    CXXFLAGS                 :=-std=c++11 -DCPU_ONLY
 endif
 ifdef DEBUG
-    CXXFLAGS             +=-g -O0 -DDEBUG
+    CXXFLAGS                 +=-g -O0 -DDEBUG
 endif
-ARFLAGS                  :=-rcs
+ARFLAGS                      :=-rcs
 
 # Global include and link flags
 ifndef CPU_ONLY
-    INCLUDE_FLAGS        :=-I"$(INC_PATH)" -I"$(CUDA_PATH)/include"
+    INCLUDE_FLAGS            :=-I"$(INC_PATH)" -I"$(CUDA_PATH)/include"
     ifeq ($(DARWIN),DARWIN)
-        LINK_FLAGS       :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib" -lgenn -lcuda -lcudart -lstdc++ -lc++
+        ifdef OPENCL
+            LINK_FLAGS       :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib" -lgenn_OPENCL -lOpenCL -lstdc++ -lc++
+        else
+            LINK_FLAGS       :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib" -lgenn -lcuda -lcudart -lstdc++ -lc++
+        endif
     else
         ifeq ($(OS_SIZE),32)
-            LINK_FLAGS   :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib" -lgenn -lcuda -lcudart
+            ifdef OPENCL
+                LINK_FLAGS   :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib" -lgenn_OPENCL -lOpenCL
+            else
+                LINK_FLAGS   :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib" -lgenn -lcuda -lcudart
+            endif
         else
-            LINK_FLAGS   :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib64" -lgenn -lcuda -lcudart
+            ifdef OPENCL
+                LINK_FLAGS   :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib64" -lgenn_OPENCL -lOpenCL
+            else
+                LINK_FLAGS   :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib64" -lgenn -lcuda -lcudart
+            endif
         endif
     endif
 else
-    INCLUDE_FLAGS        :=-I"$(INC_PATH)"
-    LINK_FLAGS           :=-L"$(LIBGENN_PATH)" -lgenn_CPU_ONLY
+    INCLUDE_FLAGS            :=-I"$(INC_PATH)"
+    LINK_FLAGS               :=-L"$(LIBGENN_PATH)" -lgenn_CPU_ONLY
     ifeq ($(DARWIN),DARWIN)
-        LINK_FLAGS       :=-L"$(LIBGENN_PATH)" -lgenn_CPU_ONLY -lstdc++ -lc++
+        LINK_FLAGS           :=-L"$(LIBGENN_PATH)" -lgenn_CPU_ONLY -lstdc++ -lc++
     endif
 endif
 

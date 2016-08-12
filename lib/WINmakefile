@@ -22,15 +22,24 @@ INC_PATH                 =$(GENN_PATH)\lib\include
 GENERATEALL_PATH         =$(MAKEDIR)
 LIBGENN_PATH             =$(GENN_PATH)\lib\lib
 !IFNDEF CPU_ONLY
+!IFDEF OPENCL
+LIBGENN_OBJ_PATH         =$(GENN_PATH)\lib\obj_OPENCL
+!ELSE
 LIBGENN_OBJ_PATH         =$(GENN_PATH)\lib\obj
+!ENDIF
 !ELSE
 LIBGENN_OBJ_PATH         =$(GENN_PATH)\lib\obj_CPU_ONLY
 !ENDIF
 
 # generateALL.exe and genn.lib targets
 !IFNDEF CPU_ONLY
+!IFDEF OPENCL
+GENERATEALL              =$(GENERATEALL_PATH)\generateALL_OPENCL.exe
+LIBGENN                  =$(LIBGENN_PATH)\genn_OPENCL.lib
+!ELSE
 GENERATEALL              =$(GENERATEALL_PATH)\generateALL.exe
 LIBGENN                  =$(LIBGENN_PATH)\genn.lib
+!ENDIF
 !ELSE
 GENERATEALL              =$(GENERATEALL_PATH)\generateALL_CPU_ONLY.exe
 LIBGENN                  =$(LIBGENN_PATH)\genn_CPU_ONLY.lib
@@ -44,7 +53,11 @@ NVCC                     ="$(CUDA_PATH)\bin\nvcc.exe"
 
 # Global C++ compiler settings
 !IFNDEF CPU_ONLY
+!IFDEF OPENCL
+CXXFLAGS                 =/nologo /EHsc /DOPENCL
+!ELSE
 CXXFLAGS                 =/nologo /EHsc /DNVCC=\"$(NVCC:\=/)\"
+!ENDIF
 !ELSE
 CXXFLAGS                 =/nologo /EHsc /DCPU_ONLY
 !ENDIF
@@ -56,14 +69,14 @@ CXXFLAGS                 =$(CXXFLAGS) /debug /Zi /Od /DDEBUG
 !IFNDEF CPU_ONLY
 INCLUDE_FLAGS            =/I"$(INC_PATH)" /I"$(CUDA_PATH)\include"
 !IF "$(PROCESSOR_ARCHITECTURE)" == "AMD64" || "$(PROCESSOR_ARCHITEW6432)" == "AMD64"
-!IFNDEF OPENCL
-LINK_FLAGS               ="$(LIBGENN_PATH)\genn.lib" "$(OPENCL_PATH)\lib\x64\OpenCL.lib"
+!IFDEF OPENCL
+LINK_FLAGS               ="$(LIBGENN_PATH)\genn_OPENCL.lib" "$(CUDA_PATH)\lib\x64\OpenCL.lib"
 !ELSE
 LINK_FLAGS               ="$(LIBGENN_PATH)\genn.lib" "$(CUDA_PATH)\lib\x64\cudart.lib" "$(CUDA_PATH)\lib\x64\cuda.lib"
 !ENDIF
 !ELSE
-!IFNDEF OPENCL
-LINK_FLAGS               ="$(LIBGENN_PATH)\genn.lib" "$(OPENCL_PATH)\lib\Win32\OpenCL.lib"
+!IFDEF OPENCL
+LINK_FLAGS               ="$(LIBGENN_PATH)\genn_OPENCL.lib" "$(CUDA_PATH)\lib\Win32\OpenCL.lib"
 !ELSE
 LINK_FLAGS               ="$(LIBGENN_PATH)\genn.lib" "$(CUDA_PATH)\lib\Win32\cudart.lib" "$(CUDA_PATH)\lib\Win32\cuda.lib"
 !ENDIF

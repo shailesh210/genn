@@ -21,10 +21,6 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-
-#define OPENCL
-
-
 #ifndef CPU_ONLY
 	#ifdef OPENCL
 		#include <CL/cl.h>

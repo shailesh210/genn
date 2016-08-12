@@ -6,10 +6,11 @@ goto :genn_begin
 rem :: display genn-buildmodel.bat help
 echo genn-buildmodel.bat script usage:
 echo genn-buildmodel.bat [cdho] model
-echo -c            only generate simulation code for the CPU
-echo -d            enables the debugging mode
-echo -h            shows this help message
-echo -o outpath    changes the output directory
+echo -c               only generate simulation code for the CPU
+echo -d               enables the debugging mode
+echo -h               shows this help message
+echo -t codetype      generate {cuda, opencl, cpu} code (default: cuda)
+echo -o outpath       changes the output directory (default: current)
 goto :eof
 
 :genn_begin
@@ -17,7 +18,7 @@ rem :: define genn-buildmodel.bat options separated by spaces
 rem :: -<option>:              option
 rem :: -<option>:""            option with argument
 rem :: -<option>:"<default>"   option with argument and default value
-set "OPTIONS=-o:"%CD%" -d: -c: -h:"
+set "OPTIONS=-t:"cuda" -o:"%CD%" -d: -c: -h:"
 for %%O in (%OPTIONS%) do for /f "tokens=1,* delims=:" %%A in ("%%O") do set "%%A=%%~B"
 
 :genn_option
@@ -46,24 +47,40 @@ if defined OPT (
 
 rem :: command options logic
 if defined -h goto :genn_help
+
 if not defined GENN_PATH (
-    echo genn-buildmodel.bat: error 1: GENN_PATH is not defined
+    echo genn-buildmodel.bat: error: GENN_PATH is not defined
     goto :eof
 )
+
 if not defined MODEL (
-    echo genn-buildmodel.bat: error 2: no model file given
+    echo genn-buildmodel.bat: error: no model file given
     goto :eof
 )
+
 for /f %%I in ("%-o%") do set "-o=%%~fI"
+
 for /f %%I in ("%MODEL%") do set "MACROS=MODEL=%%~fI GENERATEALL_PATH=%-o%"
+
 if defined -d (
     set "MACROS=%MACROS% DEBUG=1"
 )
+
 if defined -c (
     set "MACROS=%MACROS% CPU_ONLY=1"
     set GENERATEALL=.\generateALL_CPU_ONLY.exe
 ) else (
-    set GENERATEALL=.\generateALL.exe
+    if "%-t%"=="cpu" (
+        set "MACROS=%MACROS% CPU_ONLY=1"
+        set GENERATEALL=.\generateALL_CPU_ONLY.exe
+    ) else if "%-t%"=="opencl" (
+        set "MACROS=%MACROS% OPENCL=1"
+        set GENERATEALL=.\generateALL_OPENCL.exe
+    ) else if "%-t%"=="cuda" (
+        set GENERATEALL=.\generateALL.exe
+    ) else (
+        echo genn-buildmodel.bat: error: invalid -t argument: %code%
+    )
 )
 
 rem :: generate model code
