@@ -6,7 +6,7 @@
 #include <string>
 #include "global.h"
 #include "utils.h"
-#include "stringutils.h"
+#include "stringUtils.h"
 #include "CodeHelper.h"
 #include <algorithm>
 short *isGrpVarNeeded;

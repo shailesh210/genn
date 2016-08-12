@@ -58,6 +58,9 @@ void createPreIndices(unsigned int preN, unsigned int postN, SparseProjection * 
 
 
 #ifndef CPU_ONLY
+
+#ifndef OPENCL
+
 //--------------------------------------------------------------------------
 /*! \brief Function for initializing conductance array indices for sparse matrices on the GPU
 (by copying the values from the host)
@@ -95,6 +98,9 @@ void initializeSparseArrayPreInd(SparseProjection C,  unsigned int * dPreInd)
 {
     CHECK_CUDA_ERRORS(cudaMemcpy(dPreInd, C.preInd, C.connN*sizeof(unsigned int), cudaMemcpyHostToDevice));
 }
+
+#endif // OPENCL
+
 #endif
 
 #endif // SPARSEUTILS_CC

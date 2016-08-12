@@ -23,7 +23,6 @@
 
 #include <iostream>
 #include <string>
-#include <conio.h>
 
 #ifndef CPU_ONLY
 	#ifdef OPENCL
@@ -49,7 +48,6 @@ using namespace std;
 		if(call != CL_SUCCESS)\
 								{\
 			cout << "Location : " << __FILE__ << ":" << __LINE__ << endl; \
-			_getch();\
 			exit(EXIT_FAILURE);\
 						}\
 		}
@@ -74,7 +72,7 @@ using namespace std;
 	#else
 	#define CHECK_CU_ERRORS(call) call
 	#endif
-#endif
+
 
 // comment below and uncomment here when using CUDA that does not support cugetErrorName
 //#define CHECK_CU_ERRORS(call) call
@@ -89,6 +87,7 @@ using namespace std;
 	exit(EXIT_FAILURE);					\
       }								\
   }
+#endif
 #endif
 
 
