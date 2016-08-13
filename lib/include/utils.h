@@ -43,6 +43,126 @@ using namespace std;
 //--------------------------------------------------------------------------
 #ifdef OPENCL
 
+#ifndef OpenClErrorCodeToString
+#define OpenClErrorCodeToString(errorCode)\
+{\
+  switch(errorCode)\
+  {\
+  case CL_INVALID_DEVICE_TYPE:\
+        cout << "CL_INVALID_DEVICE_TYPE";\
+          break;\
+    case CL_INVALID_PLATFORM:\
+        cout << "CL_INVALID_PLATFORM";\
+          break;\
+    case CL_INVALID_DEVICE:\
+        cout << "CL_INVALID_DEVICE";\
+          break;\
+    case CL_INVALID_CONTEXT:\
+        cout << "CL_INVALID_CONTEXT";\
+          break;\
+   case CL_INVALID_QUEUE_PROPERTIES:\
+       cout << "CL_INVALID_QUEUE_PROPERTIES";\
+          break;\
+    case CL_INVALID_COMMAND_QUEUE:\
+        cout << "CL_INVALID_COMMAND_QUEUE";\
+          break;\
+    case CL_INVALID_HOST_PTR:\
+        cout << "CL_INVALID_HOST_PTR";\
+          break;\
+    case CL_INVALID_MEM_OBJECT:\
+        cout << "CL_INVALID_MEM_OBJECT";\
+          break;\
+    case CL_INVALID_IMAGE_FORMAT_DESCRIPTOR:\
+       cout << "CL_INVALID_IMAGE_FORMAT_DESCRIPTOR";\
+          break;\
+    case CL_INVALID_IMAGE_SIZE:\
+         cout << "CL_INVALID_IMAGE_SIZE";\
+          break;\
+    case CL_INVALID_SAMPLER:\
+        cout << "CL_INVALID_SAMPLER";\
+          break;\
+    case CL_INVALID_BINARY:\
+        cout << "CL_INVALID_BINARY";\
+          break;\
+    case CL_INVALID_BUILD_OPTIONS:\
+        cout << "CL_INVALID_BUILD_OPTIONS";\
+          break;\
+    case CL_INVALID_PROGRAM:\
+        cout << "CL_INVALID_PROGRAM";\
+          break;\
+    case CL_INVALID_PROGRAM_EXECUTABLE:\
+        cout << "CL_INVALID_PROGRAM_EXECUTABLE";\
+          break;\
+    case CL_INVALID_KERNEL_NAME:\
+        cout << "CL_INVALID_KERNEL_NAME";\
+          break;\
+    case CL_INVALID_KERNEL_DEFINITION:\
+        cout << "CL_INVALID_KERNEL_DEFINITION";\
+          break;\
+    case CL_INVALID_KERNEL:\
+        cout << "CL_INVALID_KERNEL";\
+          break;\
+    case CL_INVALID_ARG_INDEX:\
+        cout << "CL_INVALID_ARG_INDEX";\
+          break;\
+    case CL_INVALID_ARG_VALUE:\
+        cout << "CL_INVALID_ARG_VALUE";\
+          break;\
+    case CL_INVALID_ARG_SIZE:\
+        cout << "CL_INVALID_ARG_SIZE";\
+          break;\
+    case CL_INVALID_KERNEL_ARGS:\
+        cout << "CL_INVALID_KERNEL_ARGS";\
+          break;\
+    case CL_INVALID_WORK_DIMENSION:\
+        cout << "CL_INVALID_WORK_DIMENSION";\
+          break;\
+    case CL_INVALID_WORK_GROUP_SIZE:\
+        cout << "CL_INVALID_WORK_GROUP_SIZE";\
+          break;\
+    case CL_INVALID_WORK_ITEM_SIZE:\
+        cout << "CL_INVALID_WORK_ITEM_SIZE";\
+          break;\
+    case CL_INVALID_GLOBAL_OFFSET:\
+        cout << "CL_INVALID_GLOBAL_OFFSET";\
+          break;\
+    case CL_INVALID_EVENT_WAIT_LIST:\
+        cout << "CL_INVALID_EVENT_WAIT_LIST";\
+          break;\
+    case CL_INVALID_EVENT:\
+        cout << "CL_INVALID_EVENT";\
+          break;\
+    case CL_INVALID_OPERATION:\
+       cout << "CL_INVALID_OPERATION";\
+          break;\
+    case CL_INVALID_GL_OBJECT:\
+        cout << "CL_INVALID_GL_OBJECT";\
+          break;\
+    case CL_INVALID_BUFFER_SIZE:\
+        cout << "CL_INVALID_BUFFER_SIZE";\
+          break;\
+    case CL_INVALID_MIP_LEVEL:\
+       cout << "CL_INVALID_MIP_LEVEL";\
+          break;\
+    case CL_INVALID_GLOBAL_WORK_SIZE:\
+        cout << "CL_INVALID_GLOBAL_WORK_SIZE";\
+          break;\
+    case CL_PLATFORM_NOT_FOUND_KHR:\
+        cout << "CL_PLATFORM_NOT_FOUND_KHR";\
+          break;\
+    case CL_DEVICE_PARTITION_FAILED_EXT:\
+        cout << "CL_DEVICE_PARTITION_FAILED_EXT";\
+          break;\
+    case CL_INVALID_PARTITION_COUNT_EXT:\
+        cout << "CL_INVALID_PARTITION_COUNT_EXT";\
+          break;\
+    default:\
+        cout << "unknown error code";\
+          break;\
+}\
+}
+#endif
+
 	#ifndef CHECK_CL_ERRORS
 	#define CHECK_CL_ERRORS(call){\
 		if(call != CL_SUCCESS)\
