@@ -27,6 +27,7 @@
 #ifndef CPU_ONLY
 	#ifdef OPENCL
 		#include <CL/cl.h>
+		#include <CL/cl_ext.h>
 	#else
 		#include <cuda.h>
 		#include <cuda_runtime.h>
