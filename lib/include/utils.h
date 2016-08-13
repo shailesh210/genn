@@ -167,6 +167,8 @@ using namespace std;
 	#define CHECK_CL_ERRORS(call){\
 		if(call != CL_SUCCESS)\
 								{\
+		OpenClErrorCodeToString(call) ; \
+		  cout<<endl;\
 			cout << "Location : " << __FILE__ << ":" << __LINE__ << endl; \
 			exit(EXIT_FAILURE);\
 						}\
