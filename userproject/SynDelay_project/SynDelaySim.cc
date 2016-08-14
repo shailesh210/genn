@@ -28,14 +28,15 @@ using namespace std;
 
 SynDelay::SynDelay(bool usingGPU)
 {
-    this->usingGPU = usingGPU;
-    allocateMem();
-    initialize();
-
-#ifdef OPENCL 
-    unmap_copyStateToDevice();
-#endif 
-
+  this->usingGPU = usingGPU;
+  allocateMem();	
+  #ifdef OPENCL 
+	copyStateToDevice();
+  #endif 
+  initialize();
+  #ifdef OPENCL 
+	unmap_copyStateToDevice();
+  #endif 
 }
 
 SynDelay::~SynDelay()
@@ -104,15 +105,18 @@ int main(int argc, char *argv[])
     set_kernel_arguments();
 #endif // OPENCL
 
-    for (int i = 0; i < (TOTAL_TIME / DT); i++)
-    {
-	sim->run(t);
-
-	fileV << t
-	      << " " << VInput[0]
-	      << " " << VInter[0]
-	      << " " << VOutput[0]
-	      << endl;
+  for (int i = 0; i < (TOTAL_TIME / DT); i++)
+   {
+    sim->run(t);
+	
+    t += DT;
+	
+	
+    fileV << t
+	  << " " << VInput[0]
+	  << " " << VInter[0]
+	  << " " << VOutput[0]
+	  << endl;
 
 	for (int i= 0; i < glbSpkCntInput[spkQuePtrInput]; i++) {
 	    fileStInput << t << " " << glbSpkInput[glbSpkShiftInput+i] << endl;
@@ -131,9 +135,9 @@ int main(int argc, char *argv[])
     }
 
 #ifdef OPENCL // OPENCL
-    unmap_copyStateFromDevice();	
+    unmap_copyStateFromDevice();
+    unmap_InputCurrentSpikesFromDevice(); 
 #endif
-
     timer->stopTimer();
     cout << "# done in " << timer->getElapsedTime() << " seconds" << endl;
     fileTime << timer->getElapsedTime() << endl;
