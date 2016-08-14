@@ -4,7 +4,6 @@
 
 #include "sparseUtils.h"
 #include "utils.h"
-
 #include <vector>
 
 
@@ -58,19 +57,26 @@ void createPreIndices(unsigned int preN, unsigned int postN, SparseProjection * 
 
 
 #ifndef CPU_ONLY
-
-#ifndef OPENCL
-
 //--------------------------------------------------------------------------
 /*! \brief Function for initializing conductance array indices for sparse matrices on the GPU
 (by copying the values from the host)
  */
 //--------------------------------------------------------------------------
-
-void initializeSparseArray(SparseProjection C,  unsigned int * dInd, unsigned int * dIndInG, unsigned int preN)
+#ifdef OPENCL
+	void initializeSparseArray(cl_command_queue *command_queue, SparseProjection C,  cl_mem dInd, cl_mem dIndInG, unsigned int preN)
+#else
+	void initializeSparseArray(SparseProjection C,  unsigned int * dInd, unsigned int * dIndInG, unsigned int preN)
+#endif
 {
-    CHECK_CUDA_ERRORS(cudaMemcpy(dInd, C.ind, C.connN*sizeof(unsigned int), cudaMemcpyHostToDevice));
-    CHECK_CUDA_ERRORS(cudaMemcpy(dIndInG, C.indInG, (preN+1)*sizeof(unsigned int), cudaMemcpyHostToDevice));
+	#ifdef OPENCL
+		CHECK_CL_ERRORS(clEnqueueWriteBuffer(*command_queue, dInd, CL_TRUE, 0, C.connN*sizeof(unsigned int), C.ind, 0, NULL, NULL));
+		CHECK_CL_ERRORS(clEnqueueWriteBuffer(*command_queue, dIndInG, CL_TRUE, 0, (preN+1)*sizeof(unsigned int), C.indInG, 0, NULL, NULL));
+		
+	#else
+		
+		CHECK_CUDA_ERRORS(cudaMemcpy(dInd, C.ind, C.connN*sizeof(unsigned int), cudaMemcpyHostToDevice));
+		CHECK_CUDA_ERRORS(cudaMemcpy(dIndInG, C.indInG, (preN+1)*sizeof(unsigned int), cudaMemcpyHostToDevice));
+	#endif
 } 
 
 
@@ -79,12 +85,21 @@ void initializeSparseArray(SparseProjection C,  unsigned int * dInd, unsigned in
 (by copying the values from the host)
  */
 //--------------------------------------------------------------------------
-
-void initializeSparseArrayRev(SparseProjection C,  unsigned int * dRevInd, unsigned int * dRevIndInG, unsigned int * dRemap, unsigned int postN)
+#ifdef OPENCL
+	void initializeSparseArrayRev(cl_command_queue *command_queue, SparseProjection C,  cl_mem dRevInd, cl_mem dRevIndInG, cl_mem dRemap, unsigned int postN)
+#else
+	void initializeSparseArrayRev(SparseProjection C,  unsigned int * dRevInd, unsigned int * dRevIndInG, unsigned int * dRemap, unsigned int postN)
+#endif
 {
-    CHECK_CUDA_ERRORS(cudaMemcpy(dRevInd, C.revInd, C.connN*sizeof(unsigned int), cudaMemcpyHostToDevice));
-    CHECK_CUDA_ERRORS(cudaMemcpy(dRevIndInG, C.revIndInG, (postN+1)*sizeof(unsigned int), cudaMemcpyHostToDevice));
-    CHECK_CUDA_ERRORS(cudaMemcpy(dRemap, C.remap, C.connN*sizeof(unsigned int), cudaMemcpyHostToDevice));
+	#ifdef OPENCL
+		CHECK_CL_ERRORS(clEnqueueWriteBuffer(*command_queue, dRevInd, CL_TRUE, 0, C.connN*sizeof(unsigned int), C.revInd, 0, NULL, NULL));
+		CHECK_CL_ERRORS(clEnqueueWriteBuffer(*command_queue, dRevIndInG, CL_TRUE, 0, (postN+1)*sizeof(unsigned int), C.revIndInG, 0, NULL, NULL));
+		CHECK_CL_ERRORS(clEnqueueWriteBuffer(*command_queue, dRemap, CL_TRUE, 0, C.connN*sizeof(unsigned int), C.remap, 0, NULL, NULL));
+	#else
+		CHECK_CUDA_ERRORS(cudaMemcpy(dRevInd, C.revInd, C.connN*sizeof(unsigned int), cudaMemcpyHostToDevice));
+		CHECK_CUDA_ERRORS(cudaMemcpy(dRevIndInG, C.revIndInG, (postN+1)*sizeof(unsigned int), cudaMemcpyHostToDevice));
+		CHECK_CUDA_ERRORS(cudaMemcpy(dRemap, C.remap, C.connN*sizeof(unsigned int), cudaMemcpyHostToDevice));
+	#endif
 }
 
 
@@ -93,14 +108,18 @@ void initializeSparseArrayRev(SparseProjection C,  unsigned int * dRevInd, unsig
 (by copying the values from the host)
  */
 //--------------------------------------------------------------------------
-
-void initializeSparseArrayPreInd(SparseProjection C,  unsigned int * dPreInd)
+#ifdef OPENCL
+	void initializeSparseArrayPreInd(cl_command_queue *command_queue, SparseProjection C,  cl_mem dPreInd)
+#else
+	void initializeSparseArrayPreInd(SparseProjection C,  unsigned int * dPreInd)
+#endif
 {
-    CHECK_CUDA_ERRORS(cudaMemcpy(dPreInd, C.preInd, C.connN*sizeof(unsigned int), cudaMemcpyHostToDevice));
+	#ifdef OPENCL
+		CHECK_CL_ERRORS(clEnqueueWriteBuffer(*command_queue, dPreInd, CL_TRUE, 0, C.connN*sizeof(unsigned int), C.preInd, 0, NULL, NULL));
+	#else
+		CHECK_CUDA_ERRORS(cudaMemcpy(dPreInd, C.preInd, C.connN*sizeof(unsigned int), cudaMemcpyHostToDevice));
+	#endif
 }
-
-#endif // OPENCL
-
 #endif
 
 #endif // SPARSEUTILS_CC
