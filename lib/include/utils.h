@@ -25,6 +25,7 @@
 #include <string>
 
 #ifndef CPU_ONLY
+
 	#ifdef OPENCL
 		#include <CL/cl.h>
 		#include <CL/cl_ext.h>
@@ -32,6 +33,7 @@
 		#include <cuda.h>
 		#include <cuda_runtime.h>
 	#endif
+
 #endif	//CPU_ONLY
 
 using namespace std;
