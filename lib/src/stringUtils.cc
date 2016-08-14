@@ -9,6 +9,12 @@
 #include <regex>
 #endif
 
+string str_add(string s1, string s2)
+{
+    string s3=s1;
+    s3+=s2;
+    return s3;
+}
 
 //--------------------------------------------------------------------------
 //! \brief Tool for substituting strings in the neuron code strings or other templates
@@ -30,9 +36,22 @@ void substitute(string &s, const string trg, const string rep)
 void name_substitutions(string &code, string prefix, vector<string> &names, string postfix)
 {
     for (int k = 0, l = names.size(); k < l; k++) {
-	substitute(code, tS("$(") + names[k] + tS(")"), prefix+names[k]+postfix);
+//		if(names[k].back() == '*')
+			substitute(code, tS("$(") + names[k] + tS(")"), prefix+names[k]+postfix);
+//		else
+//			substitute(code, tS("$(") + names[k] + "[0]" + tS(")"), prefix+names[k]+"[0]"+postfix);
     }
 }
+void name_substitutions_extra(string &code, string prefix, vector<string> &names, string postfix, vector<string> &types)
+{
+    for (int k = 0, l = names.size(); k < l; k++) {
+		if(types[k].back() == '*')
+			substitute(code, tS("$(") + names[k] + tS(")"), prefix+names[k]+postfix);
+		else
+			substitute(code, tS("$(") + names[k] + tS(")"), prefix+names[k]+postfix+"[0]");
+    }
+}
+
 
 //--------------------------------------------------------------------------
 //! \brief This function performs a list of value substitutions for parameters in code snippets.
