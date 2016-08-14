@@ -162,8 +162,11 @@ void createPreIndices(unsigned int preN, unsigned int postN, SparseProjection *C
 (by copying the values from the host)
  */
 //--------------------------------------------------------------------------
-
-void initializeSparseArray(SparseProjection C,  unsigned int *dInd, unsigned int *dIndInG, unsigned int preN);
+#ifdef OPENCL
+	void initializeSparseArray(cl_command_queue *command_queue, SparseProjection C,  cl_mem dInd, cl_mem dIndInG, unsigned int preN);
+#else
+	void initializeSparseArray(SparseProjection C,  unsigned int * dInd, unsigned int * dIndInG, unsigned int preN);
+#endif
 
 
 //--------------------------------------------------------------------------
@@ -171,8 +174,11 @@ void initializeSparseArray(SparseProjection C,  unsigned int *dInd, unsigned int
 (by copying the values from the host)
  */
 //--------------------------------------------------------------------------
-
-void initializeSparseArrayRev(SparseProjection C,  unsigned int *dRevInd, unsigned int *dRevIndInG, unsigned int *dRemap, unsigned int postN);
+#ifdef OPENCL
+	void initializeSparseArrayRev(cl_command_queue *command_queue, SparseProjection C,  cl_mem dRevInd, cl_mem dRevIndInG, cl_mem dRemap, unsigned int postN);
+#else
+	void initializeSparseArrayRev(SparseProjection C,  unsigned int * dRevInd, unsigned int * dRevIndInG, unsigned int * dRemap, unsigned int postN);
+#endif
 
 
 //--------------------------------------------------------------------------
@@ -180,8 +186,11 @@ void initializeSparseArrayRev(SparseProjection C,  unsigned int *dRevInd, unsign
 (by copying the values from the host)
  */
 //--------------------------------------------------------------------------
-
-void initializeSparseArrayPreInd(SparseProjection C,  unsigned int *dPreInd);
+#ifdef OPENCL
+	void initializeSparseArrayPreInd(cl_command_queue *command_queue, SparseProjection C,  cl_mem dPreInd);
+#else
+	void initializeSparseArrayPreInd(SparseProjection C,  unsigned int * dPreInd);
+#endif
 #endif
 
 #endif
