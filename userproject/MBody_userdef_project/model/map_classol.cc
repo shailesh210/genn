@@ -42,7 +42,14 @@ classol::classol()
   baserates= new uint64_t[model.neuronN[0]];
 
   allocateMem();
+  #ifdef OPENCL 
+	copyStateToDevice();
+  #endif 
+  
   initialize();
+  #ifdef OPENCL 
+	unmap_copyStateToDevice();
+  #endif 
   sumPN= 0;
   sumKC= 0;
   sumLHI= 0;
@@ -72,7 +79,12 @@ void classol::init(unsigned int which //!< Flag defining whether GPU or CPU only
   }
   if (which == GPU) {
 #ifndef CPU_ONLY
-    ratesPN= d_baserates;
+	#ifdef OPENCL
+	//	CHECK_OPENCL_ERRORS(clEnqueueReadBuffer(command_queue, d_baserates, CL_TRUE, 0, model.neuronN[0]*sizeof(uint64_t), ratesPN, 0, NULL, NULL));
+	#else
+		ratesPN= d_baserates;
+	#endif
+	
     copyStateToDevice();
 #endif
   }
@@ -90,12 +102,29 @@ void classol::allocate_device_mem_patterns()
 
   // allocate device memory for input patterns
   size= model.neuronN[0]*PATTERNNO*sizeof(uint64_t);
-  CHECK_CUDA_ERRORS(cudaMalloc((void**) &d_pattern, size));
+  #ifdef OPENCL
+	d_pattern=clCreateBuffer(context, CL_MEM_READ_WRITE, size, NULL, &ret);
+	CHECK_OPENCL_ERRORS(ret);
+   
+  #else
+	  CHECK_CUDA_ERRORS(cudaMalloc((void**) &d_pattern, size));
+  #endif
   fprintf(stdout, "allocated %lu elements for pattern.\n", size/sizeof(uint64_t));
-  CHECK_CUDA_ERRORS(cudaMemcpy(d_pattern, pattern, size, cudaMemcpyHostToDevice));
+  #ifdef OPENCL
+	CHECK_OPENCL_ERRORS(clEnqueueWriteBuffer(command_queue, d_pattern, CL_TRUE, 0, size, pattern, 0, NULL, NULL));
+  #else
+	CHECK_CUDA_ERRORS(cudaMemcpy(d_pattern, pattern, size, cudaMemcpyHostToDevice));
+  #endif
   size= model.neuronN[0]*sizeof(uint64_t);
-  CHECK_CUDA_ERRORS(cudaMalloc((void**) &d_baserates, size));
-  CHECK_CUDA_ERRORS(cudaMemcpy(d_baserates, baserates, size, cudaMemcpyHostToDevice)); 
+  #ifdef OPENCL
+    d_baserates=clCreateBuffer(context, CL_MEM_READ_WRITE, size, NULL, &ret);
+	CHECK_OPENCL_ERRORS(ret); 
+	CHECK_OPENCL_ERRORS(clEnqueueWriteBuffer(command_queue, d_baserates, CL_TRUE, 0, size, baserates, 0, NULL, NULL));
+  #else
+	CHECK_CUDA_ERRORS(cudaMalloc((void**) &d_baserates, size));
+	CHECK_CUDA_ERRORS(cudaMemcpy(d_baserates, baserates, size, cudaMemcpyHostToDevice)); 
+  #endif
+  
 }
 
 //--------------------------------------------------------------------------
@@ -106,8 +135,13 @@ void classol::allocate_device_mem_patterns()
 void classol::free_device_mem()
 {
   // clean up memory
-  CHECK_CUDA_ERRORS(cudaFree(d_pattern));
-  CHECK_CUDA_ERRORS(cudaFree(d_baserates));
+  #ifdef OPENCL 
+	CHECK_OPENCL_ERRORS(clReleaseMemObject(d_pattern));
+	CHECK_OPENCL_ERRORS(clReleaseMemObject(d_baserates));
+  #else
+	CHECK_CUDA_ERRORS(cudaFree(d_pattern));
+	CHECK_CUDA_ERRORS(cudaFree(d_baserates));
+  #endif
 }
 #endif
 
@@ -408,13 +442,26 @@ void classol::runGPU(scalar runtime //!< Duration of time to run the model for
     for (int i= 0; i < riT; i++) {
 	if (iT%patSetTime == 0) {
 	    pno= (iT/patSetTime)%PATTERNNO;
-	    ratesPN= d_pattern;
+	#ifdef OPENCL
+	//	CHECK_OPENCL_ERRORS(clEnqueueReadBuffer(command_queue, d_pattern, CL_TRUE, 0, model.neuronN[0]*PATTERNNO*sizeof(uint64_t), ratesPN, 0, NULL, NULL));
+	#else
+		ratesPN= d_pattern;
+	#endif
+	
 	    offsetPN= pno*model.neuronN[0];
 	}
 	if (iT%patSetTime == patFireTime) {
-	    ratesPN= d_baserates;
+	#ifdef OPENCL
+		//CHECK_OPENCL_ERRORS(clEnqueueReadBuffer(command_queue, d_baserates, CL_TRUE, 0, model.neuronN[0]*sizeof(uint64_t), ratesPN, 0, NULL, NULL));
+	#else
+		ratesPN= d_baserates;
+	#endif
+	
 	    offsetPN= 0;
 	}
+	#ifdef OPENCL 
+			unmap_copySpikesFromDevice();
+		#endif
 	stepTimeGPU();
     }
 }
@@ -551,7 +598,11 @@ void classol::sum_spikes()
 
 void classol::get_kcdnsyns()
 {
-    CHECK_CUDA_ERRORS(cudaMemcpy(gKCDN, d_gKCDN, model.neuronN[1]*model.neuronN[3]*sizeof(scalar), cudaMemcpyDeviceToHost));
+	#ifdef OPENCL
+		CHECK_OPENCL_ERRORS(clEnqueueReadBuffer(command_queue, d_gKCDN, CL_TRUE, 0, model.neuronN[1]*model.neuronN[3]*sizeof(scalar), gKCDN, 0, NULL, NULL));
+	#else
+		CHECK_CUDA_ERRORS(cudaMemcpy(gKCDN, d_gKCDN, model.neuronN[1]*model.neuronN[3]*sizeof(scalar), cudaMemcpyDeviceToHost));
+	#endif
 
 }
 #endif
