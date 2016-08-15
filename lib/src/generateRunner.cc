@@ -619,7 +619,8 @@ void genRunner(NNmodel &model, //!< Model description
     os << ENDL;
 #endif
 
-#ifndef CPU_ONLY                //same for CUDA and OpenCL
+    //same for CUDA and OpenCL
+
     // generate headers for the communication utility functions such as 
     // pullXXXStateFromDevice() etc. This is useful for the brian2genn
     // interface where we do more proper compile/link and do not want
