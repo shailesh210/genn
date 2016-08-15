@@ -39,6 +39,7 @@ void substitute(string &s, const string trg, const string rep);
 
 void name_substitutions(string &code, string prefix, vector<string> &names, string postfix= "");
 
+void name_substitutions_extra(string &code, string prefix, vector<string> &names, string postfix, vector<string> &types);
 
 //--------------------------------------------------------------------------
 //! \brief This function performs a list of value substitutions for parameters in code snippets.

@@ -153,7 +153,13 @@ int main(int argc, char *argv[])
 //  locust.output_spikes(os, which);  
     if (which == GPU){ 
 #ifndef CPU_ONLY
-	locust.runGPU(DT);
+	#ifdef OPENCL
+		unmap_copyStateToDevice();
+		cout<<"i m here\n";
+		set_kernel_arguments();
+	#endif
+	 locust.getSpikesFromGPU();
+		locust.runGPU(DT);
 #endif
  
 	while (!done) 
@@ -232,6 +238,9 @@ int main(int argc, char *argv[])
     
     if (which == GPU) {
 #ifndef CPU_ONLY
+	#ifdef OPENCL
+		unmap_DNStateFromDevice();
+	#endif
 	locust.free_device_mem();
 #endif
     }

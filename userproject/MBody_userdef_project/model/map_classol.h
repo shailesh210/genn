@@ -46,8 +46,12 @@ class classol
   uint64_t *baserates;
   //------------------------------------------------------------------------
   // on the device:
-  uint64_t *d_pattern;
-  uint64_t *d_baserates;
+  #ifdef OPENCL
+	cl_mem d_pattern, d_baserates;
+  #else
+	uint64_t *d_pattern;
+	uint64_t *d_baserates;
+  #endif
   //------------------------------------------------------------------------
   unsigned int sumPN, sumKC, sumLHI, sumDN;
   unsigned int size_g; //number of connections
