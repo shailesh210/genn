@@ -42,6 +42,16 @@ classol::classol()
   baserates= new uint64_t[model.neuronN[0]];
 
   allocateMem();
+  
+  // just for testing purpose - dummy allocation
+  unsigned int connN = countEntriesAbove(gpPNKC, model.neuronN[0] * model.neuronN[1], GENN_PREFERENCES::asGoodAsZero);
+  allocatePNKC(connN);
+  connN = countEntriesAbove(gpKCDN, model.neuronN[1] * model.neuronN[3], GENN_PREFERENCES::asGoodAsZero);
+//  connN = locust.model.neuronN[1] * locust.model.neuronN[3];
+  allocateKCDN(connN);
+  
+  
+
   #ifdef OPENCL 
 	copyStateToDevice();
   #endif 
@@ -80,7 +90,7 @@ void classol::init(unsigned int which //!< Flag defining whether GPU or CPU only
   if (which == GPU) {
 #ifndef CPU_ONLY
 	#ifdef OPENCL
-	//	CHECK_OPENCL_ERRORS(clEnqueueReadBuffer(command_queue, d_baserates, CL_TRUE, 0, model.neuronN[0]*sizeof(uint64_t), ratesPN, 0, NULL, NULL));
+	    ratesPN= baserates;
 	#else
 		ratesPN= d_baserates;
 	#endif
@@ -443,7 +453,7 @@ void classol::runGPU(scalar runtime //!< Duration of time to run the model for
 	if (iT%patSetTime == 0) {
 	    pno= (iT/patSetTime)%PATTERNNO;
 	#ifdef OPENCL
-	//	CHECK_OPENCL_ERRORS(clEnqueueReadBuffer(command_queue, d_pattern, CL_TRUE, 0, model.neuronN[0]*PATTERNNO*sizeof(uint64_t), ratesPN, 0, NULL, NULL));
+		ratesPN= pattern;
 	#else
 		ratesPN= d_pattern;
 	#endif
@@ -452,6 +462,7 @@ void classol::runGPU(scalar runtime //!< Duration of time to run the model for
 	}
 	if (iT%patSetTime == patFireTime) {
 	#ifdef OPENCL
+		ratesPN= baserates;
 		//CHECK_OPENCL_ERRORS(clEnqueueReadBuffer(command_queue, d_baserates, CL_TRUE, 0, model.neuronN[0]*sizeof(uint64_t), ratesPN, 0, NULL, NULL));
 	#else
 		ratesPN= d_baserates;
@@ -461,7 +472,11 @@ void classol::runGPU(scalar runtime //!< Duration of time to run the model for
 	}
 	#ifdef OPENCL 
 			unmap_copySpikesFromDevice();
-		#endif
+	if(ratesPN!=NULL)
+		CHECK_OPENCL_ERRORS(clEnqueueWriteBuffer(command_queue, d_ratesPN,CL_TRUE, 0,model.neuronN[0]* sizeof(uint64_t),ratesPN,0, NULL, NULL));
+		CHECK_OPENCL_ERRORS(clEnqueueWriteBuffer(command_queue, d_offsetPN,CL_TRUE, 0,sizeof(unsigned int),&offsetPN,0, NULL, NULL));
+
+	#endif
 	stepTimeGPU();
     }
 }
