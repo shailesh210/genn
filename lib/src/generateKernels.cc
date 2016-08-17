@@ -78,8 +78,8 @@ void genNeuronKernel(NNmodel &model, //!< Model description
 	os << "#endif" << ENDL;
 
 	os << "#define BLOCKSZ_SYN " << synapseBlkSz << ENDL;
-  	os << "#define uint64_t unsigned long long int " << ENDL;
-  	os << "#define uint32_t unsigned long int " << ENDL;
+  	os << "typedef unsigned long uint64_t;" << ENDL;
+  	os << "typedef unsigned int uint32_t;" << ENDL;
 
   
     os << "#pragma OPENCL EXTENSION cl_khr_fp64: enable"<<ENDL;
@@ -925,8 +925,8 @@ void genSynapseKernel(NNmodel &model, //!< Model description
     os << "#ifndef _" << model.name << "_synapseKrnl_cl" << ENDL;
     os << "#define _" << model.name << "_synapseKrnl_cl" << ENDL;
     os << "#define BLOCKSZ_SYN " << synapseBlkSz << ENDL;
-    os << "#define uint64_t unsigned long long int " << ENDL;
-  	os << "#define uint32_t unsigned long int " << ENDL;
+    os << "typedef unsigned long uint64_t;" << ENDL;
+  	os << "typedef unsigned int uint32_t;" << ENDL;
 
     os << ENDL;
  
