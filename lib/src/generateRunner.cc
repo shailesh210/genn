@@ -65,6 +65,18 @@ void extern_variable_def(ofstream &os, string type, string name)
 #endif
 }
 
+#ifdef OPENCL 
+    string remove_astrisk(string str)
+    {
+        if(str.back()=='*')
+        {
+            str.pop_back();
+            
+        }
+        return str;
+    }
+#endif
+
 
 //--------------------------------------------------------------------------
 /*!
@@ -650,8 +662,8 @@ void genRunner(NNmodel &model, //!< Model description
         os << "#define push" << model.synapseName[i] << "ToDevice push" << model.synapseName[i] << "StateToDevice" << ENDL;
 	os << "void push" << model.synapseName[i] << "StateToDevice();" << ENDL;
 #ifdef OPENCL 
-	os << "#define unmap" << model.synapseName[i] << "ToDevice unmap" << model.synapseName[i] << "StateToDevice" << ENDL;
-	os << "void unmap" << model.synapseName[i] << "StateToDevice();" << ENDL;
+	os << "#define unmap_" << model.synapseName[i] << "ToDevice unmap_" << model.synapseName[i] << "StateToDevice" << ENDL;
+	os << "void unmap_" << model.synapseName[i] << "StateToDevice();" << ENDL;
 #endif
     }
     os << ENDL;
@@ -666,19 +678,19 @@ void genRunner(NNmodel &model, //!< Model description
         os << "void pull" << model.neuronName[i] << "CurrentSpikesFromDevice();" << ENDL;
         os << "void pull" << model.neuronName[i] << "CurrentSpikeEventsFromDevice();" << ENDL;
 #ifdef OPENCL 
-	os << "void unmap" << model.neuronName[i] << "StateFromDevice();" << ENDL;
-	os << "void unmap" << model.neuronName[i] << "SpikesFromDevice();" << ENDL;
-	os << "void unmap" << model.neuronName[i] << "SpikeEventsFromDevice();" << ENDL;
-        os << "void unmap" << model.neuronName[i] << "CurrentSpikesFromDevice();" << ENDL;
-        os << "void unmap" << model.neuronName[i] << "CurrentSpikeEventsFromDevice();" << ENDL;
+	os << "void unmap_" << model.neuronName[i] << "StateFromDevice();" << ENDL;
+	os << "void unmap_" << model.neuronName[i] << "SpikesFromDevice();" << ENDL;
+	os << "void unmap_" << model.neuronName[i] << "SpikeEventsFromDevice();" << ENDL;
+        os << "void unmap_" << model.neuronName[i] << "CurrentSpikesFromDevice();" << ENDL;
+        os << "void unmap_" << model.neuronName[i] << "CurrentSpikeEventsFromDevice();" << ENDL;
 #endif
     }
     for (int i = 0; i < model.synapseGrpN; i++) {
 	os << "#define pull" << model.synapseName[i] << "FromDevice pull" << model.synapseName[i] << "StateFromDevice" << ENDL;
 	os << "void pull" << model.synapseName[i] << "StateFromDevice();" << ENDL;
 #ifdef OPENCL
-	os << "#define unamp" << model.synapseName[i] << "FromDevice unmap" << model.synapseName[i] << "StateFromDevice" << ENDL;
-	os << "void unmap" << model.synapseName[i] << "StateFromDevice();" << ENDL;
+	os << "#define unamp" << model.synapseName[i] << "FromDevice unmap_" << model.synapseName[i] << "StateFromDevice" << ENDL;
+	os << "void unmap_" << model.synapseName[i] << "StateFromDevice();" << ENDL;
 #endif
     }
     os << ENDL;
@@ -1715,13 +1727,13 @@ void genRunner(NNmodel &model, //!< Model description
          
     for (int i= 0, l= model.neuronKernelParameters.size(); i < l; i++) {
         os << "d_"<< model.neuronKernelParameters[i] << "=clCreateBuffer(context,  CL_MEM_READ_WRITE ,";       //check d_ or dd_
-        os << model.neuronKernelParameters[i].size() << " * sizeof(" << model.neuronKernelParameterTypes[i] << "), NULL, &ret);" << ENDL;
+        os << model.neuronKernelParameters[i].size() << " * sizeof(" << remove_astrisk(model.neuronKernelParameterTypes[i]) << "), NULL, &ret);" << ENDL;
         os << "CHECK_OPENCL_ERRORS(ret);"<<ENDL;
         
         
-        os << "CHECK_OPENCL_ERRORS(clEnqueueWriteBuffer(command_queue, d_" << model.neuronKernelParameters[i] ;
-        os << ",CL_TRUE, 0," << model.neuronKernelParameters[i].size() << "* sizeof("<< model.neuronKernelParameterTypes[i] << "),";
-        os << "&" << model.neuronKernelParameters[i] << ",0, NULL, NULL));" << ENDL;
+   //     os << "CHECK_OPENCL_ERRORS(clEnqueueWriteBuffer(command_queue, d_" << model.neuronKernelParameters[i] ;
+   //     os << ",CL_TRUE, 0," << model.neuronKernelParameters[i].size() << "* sizeof("<< model.neuronKernelParameterTypes[i] << "),";
+   //     os << "&" << model.neuronKernelParameters[i] << ",0, NULL, NULL));" << ENDL;
 
            
     }
@@ -2025,15 +2037,15 @@ void genRunner(NNmodel &model, //!< Model description
 #ifndef CPU_ONLY
 #ifdef OPENCL
         os << "// Allocate device side variables" << ENDL;
-        os << "d_indInG" << model.synapseName[i] << " = clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
+        os << "d_indInG" << model.synapseName[i] << " = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,";
         os <<  " sizeof(unsigned int) * ("<< model.neuronN[model.synapseSource[i]] + 1  <<") ,NULL,&ret);" << ENDL; 
         
-        os << "d_ind" << model.synapseName[i] << " = clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
+        os << "d_ind" << model.synapseName[i] << " = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,";
         os <<  " sizeof(unsigned int) * ("<< size  <<") ,NULL,&ret);" << ENDL;  
        
         if (model.synapseUsesSynapseDynamics[i]) {
                     
-        os << "d_preInd" << model.synapseName[i] << " = clCreateBuffer(context, CL_MEM_ALLOC_HOST_PTR,";
+        os << "d_preInd" << model.synapseName[i] << " = clCreateBuffer(context,CL_MEM_READ_WRITE |  CL_MEM_ALLOC_HOST_PTR,";
         os <<  " sizeof(unsigned int) * ("<< size  <<") ,NULL,&ret);" << ENDL;  
         }
         if (model.synapseUsesPostLearning[i]) {
