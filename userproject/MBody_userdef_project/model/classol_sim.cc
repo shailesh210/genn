@@ -149,8 +149,8 @@ int main(int argc, char *argv[])
     int done= 0;
     double last_t_report=  t;
     timer.startTimer();
-//  locust.output_state(os, which);  
-//  locust.output_spikes(os, which);  
+    //locust.output_state(osf, which);  
+    //locust.output_spikes(osf2, which);  
     if (which == GPU){ 
 #ifndef CPU_ONLY
 	#ifdef OPENCL
@@ -176,10 +176,9 @@ int main(int argc, char *argv[])
 #endif 
 
 	    locust.sum_spikes();
-//    locust.output_spikes(osf, which);
-//    locust.output_state(os, which);  // while outputting the current one ...
-
+	    //locust.output_state(osf, which);  // while outputting the current one ...
 	    locust.output_spikes(osf2, which);
+
 	    // report progress
 	    if (t - last_t_report >= T_REPORT_TME)
 	    {
@@ -204,10 +203,8 @@ int main(int argc, char *argv[])
 #endif 
 
 	    locust.sum_spikes();
-//    locust.output_spikes(osf, which);
-//    locust.output_state(os, which);  // while outputting the current one ...
- 
-	    locust.output_spikes(osf2, which);
+	    //locust.output_state(osf, which);  // while outputting the current one ...
+ 	    locust.output_spikes(osf2, which);
 
 	    // report progress
 	    if (t - last_t_report >= T_REPORT_TME)
