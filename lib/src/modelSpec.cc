@@ -839,25 +839,19 @@ void NNmodel::setSeed(unsigned int inseed /*!< the new seed  */)
 
 void NNmodel::setGPUDevice(int device)
 {
-  int deviceCount;
+    assert(device >= -1);
 #ifdef OPENCL
-	int ret_num_platforms;
-	cl_platform_id platform_id = NULL;
-	cl_device_id device_ids[100];
-	CHECK_CL_ERRORS(clGetPlatformIDs(1, &platform_id,(cl_uint *) &ret_num_platforms));
-	CHECK_CL_ERRORS(clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, device_ids, (cl_uint *)&deviceCount));
-#else
-	CHECK_CUDA_ERRORS(cudaGetDeviceCount(&deviceCount));
-#endif
-  assert(device >= -1);
-  assert(device < deviceCount);
-  if (device == -1) GENN_PREFERENCES::autoChooseDevice= 1;
-  else {
-      GENN_PREFERENCES::autoChooseDevice= 0;
-      GENN_PREFERENCES::defaultDevice= device;
-  }
+    assert(device < (int) deviceCount[thePlatform]);
+#else // else CUDA
+    assert(device < (int) deviceCount);
+#endif // end CUDA
+    if (device == -1) GENN_PREFERENCES::autoChooseDevice= 1;
+    else {
+	GENN_PREFERENCES::autoChooseDevice= 0;
+	GENN_PREFERENCES::defaultDevice= device;
+    }
 }
-#endif
+#endif // end CPU_ONLY
 
 
 string NNmodel::scalarExpr(const double val) 

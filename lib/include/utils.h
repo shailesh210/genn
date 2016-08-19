@@ -21,20 +21,20 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_ //!< macro for avoiding multiple inclusion during compilation
 
+#include "global.h"
+
 #include <iostream>
 #include <string>
 
 #ifndef CPU_ONLY
-
-	#ifdef OPENCL
-		#include <CL/cl.h>
-		#include <CL/cl_ext.h>
-	#else
-		#include <cuda.h>
-		#include <cuda_runtime.h>
-	#endif
-
-#endif	//CPU_ONLY
+#ifdef OPENCL
+#include <CL/cl.h>
+#include <CL/cl_ext.h>
+#else // else CUDA
+#include <cuda.h>
+#include <cuda_runtime.h>
+#endif // end CUDA
+#endif // end not CPU_ONLY
 
 using namespace std;
 
@@ -51,9 +51,6 @@ using namespace std;
     {								\
 	switch(errorCode)					\
 	{							\
-	case CL_DEVICE_NOT_FOUND:				\
-	    cerr << "CL_DEVICE_NOT_FOUND";			\
-	    break;						\
 	case CL_INVALID_DEVICE_TYPE:				\
 	    cerr << "CL_INVALID_DEVICE_TYPE";			\
 	    break;						\
@@ -169,12 +166,11 @@ using namespace std;
     }
 #endif
 
-
 #ifndef CHECK_CL_ERRORS
 #define CHECK_CL_ERRORS(call)				\
     {							\
 	cl_int error = call;				\
-	if (error != CL_SUCCESS)			\
+	if (error > CL_SUCCESS)				\
 	{						\
 	    cerr << __FILE__ << ": " << __LINE__ ;	\
 	    cerr << ": OpenCL error " << error << ": ";	\
@@ -185,7 +181,7 @@ using namespace std;
     }
 #endif
 
-#else // CUDA
+#else // else CUDA
 
 #if CUDA_VERSION >= 6050
 #define CHECK_CU_ERRORS(call)					\
@@ -205,7 +201,6 @@ using namespace std;
 #define CHECK_CU_ERRORS(call) call
 #endif
 
-
 // comment below and uncomment here when using CUDA that does not support cugetErrorName
 //#define CHECK_CU_ERRORS(call) call
 #define CHECK_CUDA_ERRORS(call)					\
@@ -219,9 +214,9 @@ using namespace std;
 	    exit(EXIT_FAILURE);					\
 	}							\
     }
-#endif
 
-#endif
+#endif // end CUDA
+#endif // end not CPU_ONLY
 
 
 //--------------------------------------------------------------------------
@@ -237,14 +232,23 @@ using namespace std;
 
 
 #ifndef CPU_ONLY
+#ifdef OPENCL
+//--------------------------------------------------------------------------
+/*! \brief Function for getting the capabilities of an OpenCL device
+ */
+//--------------------------------------------------------------------------
+void get_device_properties(clDeviceProp **deviceProp, cl_uint platform, cl_uint device);
+
+
+#else // else CUDA
 //--------------------------------------------------------------------------
 /*! \brief Function for getting the capabilities of a CUDA device via the driver API.
  */
 //--------------------------------------------------------------------------
-#ifndef OPENCL // CUDA
-	CUresult cudaFuncGetAttributesDriver(cudaFuncAttributes *attr, CUfunction kern);
-#endif
-#endif
+CUresult cudaFuncGetAttributesDriver(cudaFuncAttributes *attr, CUfunction kern);
+
+#endif // end cuda
+#endif // end not CPU_ONLY
 
 
 //--------------------------------------------------------------------------

@@ -28,11 +28,32 @@
 
 
 #ifndef CPU_ONLY
+#ifdef OPENCL
+//--------------------------------------------------------------------------
+/*! \brief Function for getting the capabilities of an OpenCL device
+ */
+//--------------------------------------------------------------------------
+
+void get_device_properties(clDeviceProp **deviceProp, cl_uint platform, cl_uint device)
+{
+    char buffer[2048];
+    CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[platform][device], CL_DEVICE_OPENCL_C_VERSION, sizeof(buffer), buffer, NULL));
+    deviceProp[platform][device].major = (int)(buffer[9] - '0');
+    deviceProp[platform][device].minor = (int)(buffer[11] - '0');
+    CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[platform][device], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &(deviceProp[platform][device].MAX_WORK_GROUP_SIZE), NULL));
+    CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[platform][device], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &(deviceProp[platform][device].DEVICE_LOCAL_MEM_SIZE), NULL));
+    CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[platform][device], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_ulong), &(deviceProp[platform][device].DEVICE_MAX_COMPUTE_UNITS), NULL));
+    CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[platform][device], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &(deviceProp[platform][device].DEVICE_GLOBAL_MEM_SIZE), NULL));
+    CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[platform][device], CL_DEVICE_REGISTERS_PER_BLOCK_NV, sizeof(cl_uint), &(deviceProp[platform][device].REGISTERSS_PER_BLOCK), NULL));
+}
+
+
+#else // else CUDA
 //--------------------------------------------------------------------------
 /*! \brief Function for getting the capabilities of a CUDA device via the driver API.
  */
 //--------------------------------------------------------------------------
-#ifndef OPENCL // CUDA
+
 CUresult cudaFuncGetAttributesDriver(cudaFuncAttributes *attr, CUfunction kern) {
     int tmp;
     CHECK_CU_ERRORS(cuFuncGetAttribute(&tmp, CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK, kern));
@@ -72,8 +93,9 @@ CUresult cudaFuncGetAttributesDriver(cudaFuncAttributes *attr, CUfunction kern) 
     attr->binaryVersion= tmp;
     return CUDA_SUCCESS;
 }
-#endif
-#endif
+#endif // end CUDA
+#endif // end not CPU_ONLY
+
 
 //--------------------------------------------------------------------------
 /*! \brief Function called upon the detection of an error. Outputs an error message and then exits.
