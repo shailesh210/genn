@@ -2460,7 +2460,7 @@ void genRunner(NNmodel &model, //!< Model description
 
 #ifndef CPU_ONLY
     cout << "Global memory required for core model: " << mem/1e6 << " MB. " << ENDL;
-    cout << deviceProp[theDevice].DEVICE_GLOBAL_MEM_SIZE << " for device " << theDevice << ENDL;  
+    cout << deviceProp[thePlatform][theDevice].DEVICE_GLOBAL_MEM_SIZE << " for device " << theDevice << ENDL;  
   
     if (memremsparse != 0) {
     int connEstim = int(memremsparse / (theSize(model.ftype) + sizeof(unsigned int)));
@@ -2471,10 +2471,10 @@ void genRunner(NNmodel &model, //!< Model description
     cout << " connections per neuron, without considering any other dynamic memory load." << ENDL;
     }
     else {
-    if (0.5 * deviceProp[theDevice].DEVICE_GLOBAL_MEM_SIZE < mem) {
+    if (0.5 * deviceProp[thePlatform][theDevice].DEVICE_GLOBAL_MEM_SIZE < mem) {
         cout << "memory required for core model (" << mem/1e6;
         cout << "MB) is more than 50% of global memory on the chosen device";
-        cout << "(" << deviceProp[theDevice].DEVICE_GLOBAL_MEM_SIZE/1e6 << "MB)." << ENDL;
+        cout << "(" << deviceProp[thePlatform][theDevice].DEVICE_GLOBAL_MEM_SIZE/1e6 << "MB)." << ENDL;
         cout << "Experience shows that this is UNLIKELY TO WORK ... " << ENDL;
     }
     }
