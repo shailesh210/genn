@@ -148,7 +148,16 @@ int main(int argc, char *argv[])
   timer.startTimer();
 
 #ifndef CPU_ONLY
-  if (which == GPU){   
+
+	#ifdef OPENCL
+		unmap_copyStateToDevice();
+		cout<<"i m here\n";
+		set_kernel_arguments();
+	
+	#endif
+	
+  if (which == GPU){  
+
     while (!done) 
     {    
 	locust.runGPU(DT); // run next batch
@@ -223,6 +232,9 @@ int main(int argc, char *argv[])
 
 #ifndef CPU_ONLY
   if (which == GPU) {
+	#ifdef OPENCL
+		unmap_DNStateFromDevice();
+	#endif
     locust.free_device_mem();
   }
 #endif
