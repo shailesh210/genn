@@ -69,7 +69,13 @@ void genNeuronKernel(NNmodel &model, //!< Model description
 	
 	// define constants
 	os << "#undef DT" << ENDL;
-	os << "#define DT 1.00000f" << ENDL;
+	// write DT macro
+    os << "#undef DT" << ENDL;
+    if (model.ftype == "float") {
+    os << "#define DT " << tS(model.dt) << "f" << ENDL;
+    } else {
+        os << "#define DT " << tS(model.dt) << ENDL;
+    }
 	os << "#ifndef MYRAND" << ENDL;
 	os << "#define MYRAND(Y,X) Y = Y * 1103515245 + 12345; X = (Y >> 16);" << ENDL;
 	os << "#endif" << ENDL;
@@ -80,6 +86,12 @@ void genNeuronKernel(NNmodel &model, //!< Model description
 	os << "#define BLOCKSZ_SYN " << synapseBlkSz << ENDL;
   	os << "typedef unsigned long uint64_t;" << ENDL;
   	os << "typedef unsigned int uint32_t;" << ENDL;
+  	#define B(x,i) ((x) & (0x80000000 >> (i))) //!< Extract the bit at the specified position i from x
+
+#define setB(x,i) x= ((x) | (0x80000000 >> (i))) //!< Set the bit at the specified position i in x to 1
+
+#define delB(x,i) x= ((x) & (~(0x80000000 >> (i)))) //!< Set the bit at the specified position i in x to 0
+
 
   
     os << "#pragma OPENCL EXTENSION cl_khr_fp64: enable"<<ENDL;
@@ -941,7 +953,13 @@ void genSynapseKernel(NNmodel &model, //!< Model description
 	
 	// define constants
 	os << "#undef DT" << ENDL;
-	os << "#define DT 1.00000f" << ENDL;
+	// write DT macro
+    os << "#undef DT" << ENDL;
+    if (model.ftype == "float") {
+    os << "#define DT " << tS(model.dt) << "f" << ENDL;
+    } else {
+        os << "#define DT " << tS(model.dt) << ENDL;
+    }
 	os << "#ifndef MYRAND" << ENDL;
 	os << "#define MYRAND(Y,X) Y = Y * 1103515245 + 12345; X = (Y >> 16);" << ENDL;
 	os << "#endif" << ENDL;

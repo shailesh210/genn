@@ -1711,7 +1711,7 @@ void genRunner(NNmodel &model, //!< Model description
     }
     os << ENDL;
     }
-    
+#ifdef OPENCL
     os << "d_done "  << "=clCreateBuffer(context,  CL_MEM_READ_WRITE ,";        //check d_ or dd_
         os << " sizeof(unsigned int), NULL, &ret);" << ENDL;
         os << "CHECK_OPENCL_ERRORS(ret);"<<ENDL;
@@ -1738,6 +1738,7 @@ void genRunner(NNmodel &model, //!< Model description
 
            
     }
+#endif
 //    os << "mapBuffer();" << ENDL; 
     
     os << "}" << ENDL << ENDL;
