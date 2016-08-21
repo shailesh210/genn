@@ -5224,16 +5224,16 @@ void genMakefile(NNmodel &model, //!< Model description
     os << endl;
     os << "clean:" << endl;
     os << "\t-del runner.obj 2>nul" << endl;
-#else
+#else // else not CPU_ONLY
 #ifdef OPENCL 
-    string cxxFlags = "/c ";
+    string cxxFlags = "/c /DOPENCL";
     if (GENN_PREFERENCES::optimizeCode) cxxFlags += " /O2";
     if (GENN_PREFERENCES::debugCode) cxxFlags += " /debug /Zi /Od";
 
     os << endl;
     os << "CXXFLAGS       =/nologo /EHsc " << cxxFlags << endl;
     os << endl;
-    os << "INCLUDEFLAGS   =/I\"$(GENN_PATH)\\lib\\include\" -I\"$(OPENCL_PATH)\\include\" " << endl;
+    os << "INCLUDEFLAGS   =/I\"$(GENN_PATH)\\lib\\include\" -I\"$(OPENCL_PATH)\\include\"" << endl;
     os << endl;
     os << "all: runner.obj" << endl;
     os << endl;
@@ -5243,7 +5243,7 @@ void genMakefile(NNmodel &model, //!< Model description
     os << "clean:" << endl;
     os << "\t-del runner.obj 2>nul" << endl;
 
-#else
+#else // else CUDA
     string nvccFlags = "-c -x cu -arch sm_";
     nvccFlags += tS(deviceProp[theDevice].major) + tS(deviceProp[theDevice].minor);
     if (GENN_PREFERENCES::optimizeCode) nvccFlags += " -O3 -use_fast_math";
@@ -5263,8 +5263,8 @@ void genMakefile(NNmodel &model, //!< Model description
     os << endl;
     os << "clean:" << endl;
     os << "\t-del runner.obj 2>nul" << endl;
-#endif
-#endif
+#endif // end CUDA
+#endif // end not CPU_ONLY
 
 #else // UNIX
 
@@ -5285,25 +5285,25 @@ void genMakefile(NNmodel &model, //!< Model description
     os << endl;
     os << "clean:" << endl;
     os << "\trm -f runner.o" << endl;
-#else
+#else // else not CPU_ONLY
 #ifdef OPENCL
-    string cxxFlags = "-c ";
+    string cxxFlags = "-c -DOPENCL";
     if (GENN_PREFERENCES::optimizeCode) cxxFlags += " -O3 -ffast-math";
     if (GENN_PREFERENCES::debugCode) cxxFlags += " -O0 -g";
 
     os << endl;
     os << "CXXFLAGS       :=" << cxxFlags << endl;
     os << endl;
-    os << "INCLUDEFLAGS   =-I\"$(GENN_PATH)/lib/include\"" << endl;
+    os << "INCLUDEFLAGS   =-I\"$(GENN_PATH)/lib/include\" -I\"$(OPENCL_PATH)/include\"" << endl;
     os << endl;
     os << "all: runner.o" << endl;
     os << endl;
     os << "runner.o: runner.cc" << endl;
-    os << "\t$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) runner.cc /link /LIBPATH:\"$(OPENCL_PATH)\\lib\\x64\" OpenCL.lib" << endl;
+    os << "\t$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) runner.cc -L\"$(OPENCL_PATH)/lib64\" -lOpenCL" << endl;
     os << endl;
     os << "clean:" << endl;
     os << "\trm -f runner.o" << endl;
-#else
+#else // else CUDA
     string nvccFlags = "-c -x cu -arch sm_";
     nvccFlags += tS(deviceProp[theDevice].major) + tS(deviceProp[theDevice].minor);
     if (GENN_PREFERENCES::optimizeCode) nvccFlags += " -O3 -use_fast_math -Xcompiler \"-ffast-math\"";
@@ -5323,10 +5323,10 @@ void genMakefile(NNmodel &model, //!< Model description
     os << endl;
     os << "clean:" << endl;
     os << "\trm -f runner.o" << endl;
-#endif
-#endif
+#endif // end CUDA
+#endif // end not CPU_ONLY
 
-#endif
+#endif // end UNIX
 
     os.close();
 }

@@ -118,9 +118,15 @@ int main(int argc, char *argv[])
 	  << " " << VOutput[0]
 	  << endl;
 
+#ifdef OPENCL
+	for (int i= 0; i < glbSpkCntInput[*spkQuePtrInput]; i++) {
+	    fileStInput << t << " " << glbSpkInput[glbSpkShiftInput+i] << endl;
+	}
+#else // CUDA
 	for (int i= 0; i < glbSpkCntInput[spkQuePtrInput]; i++) {
 	    fileStInput << t << " " << glbSpkInput[glbSpkShiftInput+i] << endl;
 	}
+#endif // CUDA
 	for (int i= 0; i < glbSpkCntInter[0]; i++) {
 	    fileStInter << t << " " << glbSpkInter[i] << endl;
 	}
