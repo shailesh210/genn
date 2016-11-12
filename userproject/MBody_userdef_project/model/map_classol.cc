@@ -90,7 +90,10 @@ void classol::init(unsigned int which //!< Flag defining whether GPU or CPU only
   if (which == GPU) {
 #ifndef CPU_ONLY
 	#ifdef OPENCL
-	    ratesPN= baserates;
+	 //   d_ratesPN= d_baserates;
+		//CHECK_OPENCL_ERRORS(clEnqueueReadBuffer(command_queue, d_baserates, CL_TRUE, 0, model.neuronN[0]*sizeof(uint64_t), ratesPN, 0, NULL, NULL));
+		CHECK_OPENCL_ERRORS(clEnqueueWriteBuffer(command_queue, d_ratesPN,CL_TRUE, 0,model.neuronN[0]* sizeof(uint64_t),baserates,0, NULL, NULL));
+
 	#else
 		ratesPN= d_baserates;
 	#endif
@@ -452,8 +455,11 @@ void classol::runGPU(scalar runtime //!< Duration of time to run the model for
     for (int i= 0; i < riT; i++) {
 	if (iT%patSetTime == 0) {
 	    pno= (iT/patSetTime)%PATTERNNO;
+      offsetPN= pno*model.neuronN[0];
 	#ifdef OPENCL
-		ratesPN= pattern;
+	//	d_ratesPN= d_pattern;
+	CHECK_OPENCL_ERRORS(clEnqueueWriteBuffer(command_queue, d_ratesPN,CL_TRUE, 0,model.neuronN[0]* sizeof(uint64_t),pattern+offsetPN,0, NULL, NULL));
+	//	CHECK_OPENCL_ERRORS(clEnqueueReadBuffer(command_queue, d_ratesPN, CL_TRUE, 0, model.neuronN[0]*PATTERNNO*sizeof(uint64_t), ratesPN, 0, NULL, NULL));
 	#else
 		ratesPN= d_pattern;
 	#endif
@@ -462,7 +468,9 @@ void classol::runGPU(scalar runtime //!< Duration of time to run the model for
 	}
 	if (iT%patSetTime == patFireTime) {
 	#ifdef OPENCL
-		ratesPN= baserates;
+		//d_ratesPN= d_baserates;
+		CHECK_OPENCL_ERRORS(clEnqueueWriteBuffer(command_queue, d_ratesPN,CL_TRUE, 0,model.neuronN[0]* sizeof(uint64_t),baserates,0, NULL, NULL));
+
 		//CHECK_OPENCL_ERRORS(clEnqueueReadBuffer(command_queue, d_baserates, CL_TRUE, 0, model.neuronN[0]*sizeof(uint64_t), ratesPN, 0, NULL, NULL));
 	#else
 		ratesPN= d_baserates;
@@ -472,8 +480,8 @@ void classol::runGPU(scalar runtime //!< Duration of time to run the model for
 	}
 	#ifdef OPENCL 
 			unmap_copySpikesFromDevice();
-	if(ratesPN!=NULL)
-		CHECK_OPENCL_ERRORS(clEnqueueWriteBuffer(command_queue, d_ratesPN,CL_TRUE, 0,model.neuronN[0]* sizeof(uint64_t),ratesPN,0, NULL, NULL));
+	//if(ratesPN!=NULL)
+//		CHECK_OPENCL_ERRORS(clEnqueueWriteBuffer(command_queue, d_ratesPN,CL_TRUE, 0,model.neuronN[0]* sizeof(uint64_t),ratesPN,0, NULL, NULL));
 		CHECK_OPENCL_ERRORS(clEnqueueWriteBuffer(command_queue, d_offsetPN,CL_TRUE, 0,sizeof(unsigned int),&offsetPN,0, NULL, NULL));
 
 	#endif
