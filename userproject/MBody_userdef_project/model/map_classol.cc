@@ -462,6 +462,7 @@ void classol::runGPU(scalar runtime //!< Duration of time to run the model for
 	//	CHECK_OPENCL_ERRORS(clEnqueueReadBuffer(command_queue, d_ratesPN, CL_TRUE, 0, model.neuronN[0]*PATTERNNO*sizeof(uint64_t), ratesPN, 0, NULL, NULL));
 	#else
 		ratesPN= d_pattern;
+    
 	#endif
 	
 	    offsetPN= pno*model.neuronN[0];
