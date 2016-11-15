@@ -1,22 +1,22 @@
 /*--------------------------------------------------------------------------
-Author: Thomas Nowotny
+   Author: Thomas Nowotny
 
-Institute: Center for Computational Neuroscience and Robotics
-University of Sussex
-Falmer, Brighton BN1 9QJ, UK
+   Institute: Center for Computational Neuroscience and Robotics
+              University of Sussex
+	      Falmer, Brighton BN1 9QJ, UK
 
-email to:  T.Nowotny@sussex.ac.uk
+   email to:  T.Nowotny@sussex.ac.uk
 
-initial version: 2010-02-07
+   initial version: 2010-02-07
 
 --------------------------------------------------------------------------*/
 
 //--------------------------------------------------------------------------
 /*! \file generateALL.cc
 
-\brief Main file combining the code for code generation. Part of the code generation section.
+  \brief Main file combining the code for code generation. Part of the code generation section.
 
-The file includes separate files for generating kernels (generateKernels.cc), generating the CPU side code for running simulations on either the CPU or GPU (generateRunner.cc) and for CPU-only simulation code (generateCPU.cc).
+  The file includes separate files for generating kernels (generateKernels.cc), generating the CPU side code for running simulations on either the CPU or GPU (generateRunner.cc) and for CPU-only simulation code (generateCPU.cc).
 
 */
 //--------------------------------------------------------------------------
@@ -46,6 +46,36 @@ The file includes separate files for generating kernels (generateKernels.cc), ge
 CodeHelper hlp;
 //hlp.setVerbose(true);//this will show the generation of bracketing (brace) levels. Helps to debug a bracketing issue
 
+#ifdef OPENCL
+//set device properties for opencl
+void get_device_properties(CLDeviceProp *deviceprop, int device_no)
+{
+	char buffer[10240];
+	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_OPENCL_C_VERSION, sizeof(buffer), buffer, NULL));
+	deviceprop[device_no].major = (int)(buffer[9] - '0');
+	deviceprop[device_no].minor = (int)(buffer[11] - '0');
+	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &(deviceprop[device_no].MAX_WORK_GROUP_SIZE), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &(deviceprop[device_no].DEVICE_LOCAL_MEM_SIZE), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_ulong), &(deviceprop[device_no].DEVICE_MAX_COMPUTE_UNITS), NULL));
+	//	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_NAME, sizeof(cl_ulong), ((deviceprop)->DEVICE_NAME), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &(deviceprop[device_no].DEVICE_GLOBAL_MEM_SIZE), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_REGISTERS_PER_BLOCK_NV, sizeof(cl_uint), &(deviceprop[device_no].REGISTERSS_PER_BLOCK), NULL));
+}
+/*
+// display device properties OPENCL
+void show_device_properties(CLDeviceProp *deviceprop, int device_no)
+{
+cout << deviceprop[device_no].MAX_WORK_GROUP_SIZE <<'\n';							//maxThreadsPerBlock
+cout << deviceprop[device_no].DEVICE_LOCAL_MEM_SIZE << '\n';						//sharedMemPerBlock
+cout << deviceprop[device_no].DEVICE_MAX_COMPUTE_UNITS << '\n';					//multiProcessorCount
+//char DEVICE_NAME[100];									//name
+cout << deviceprop[device_no].DEVICE_GLOBAL_MEM_SIZE << '\n';					//totalGlobalMem
+cout << deviceprop[device_no].REGISTERSS_PER_BLOCK << '\n';						//regsPerBlock
+cout << deviceprop[device_no].MAX_WORK_UNITS_PER_COMPUTE_UNIT << '\n';
+}
+*/
+
+#endif 	//OPENCL
 
 //--------------------------------------------------------------------------
 /*! \brief This function will call the necessary sub-functions to generate the code for simulating a model.
@@ -198,50 +228,23 @@ int main(int argc,     //!< number of arguments; expected to be 2
 #endif // end DEBUG
 
 #ifndef CPU_ONLY
-#ifdef OPENCL
 
-
-
-
-
-
-
-    platformCount = 0;
-    CHECK_CL_ERRORS(clGetPlatformIDs(max_platforms, platform_ids, &platformCount));
-    cerr << "DEBUG:  platform_ids: " << platform_ids << "  platformCount: " << platformCount << endl;
-
-    for (int i = 0; i < platformCount; i++) {
-	deviceCount[i] = 0;
-	CHECK_CL_ERRORS(clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_ALL, max_devices, device_ids[i], &deviceCount[i]));
-	cerr << "DEBUG:  device_ids[" << i << "]: " << device_ids[i] << "  deviceCount[" << i << "]: " << deviceCount[i] << endl;
-    }
-
-
-
-    deviceProp = new clDeviceProp *[platformCount];
-    for (cl_uint platform = 0; platform < platformCount; platform++) {
-	deviceProp[platform] = new clDeviceProp[deviceCount[platform]];
-	for (cl_uint device = 0; device < deviceCount[platform]; device++) {
-	    get_device_properties(deviceProp, platform, device);
-        }
-    }
-
-
-    //flags for Lancing
-    //thePlatform = 1; // platform two
-    //theDevice = 0; // device one on platform two
-
-
-
-#else // else CUDA
-    CHECK_CUDA_ERRORS(cudaGetDeviceCount(&deviceCount));
-    deviceProp = new cudaDeviceProp[deviceCount];
-    for (int device = 0; device < deviceCount; device++) {
-	CHECK_CUDA_ERRORS(cudaSetDevice(device));
-	CHECK_CUDA_ERRORS(cudaGetDeviceProperties(&(deviceProp[device]), device));
-    }
-#endif // end CUDA
-#endif // end not CPU_ONLY
+#ifndef OPENCL
+	CHECK_CL_ERRORS(clGetPlatformIDs(1, &platform_id, &ret_num_platforms));
+	CHECK_CL_ERRORS(clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, device_ids, (cl_uint *)&deviceCount));
+	deviceProp = new CLDeviceProp[deviceCount];
+	for (int device = 0; device < deviceCount; device++){
+		get_device_properties(deviceProp, device);
+	}
+#else
+	CHECK_CUDA_ERRORS(cudaGetDeviceCount(&deviceCount));
+	deviceProp = new cudaDeviceProp[deviceCount];
+	for (int device = 0; device < deviceCount; device++) {
+		CHECK_CUDA_ERRORS(cudaSetDevice(device));
+		CHECK_CUDA_ERRORS(cudaGetDeviceProperties(&(deviceProp[device]), device));
+	}
+#endif  // OPENCL
+#endif // CPU_ONLY
 
     NNmodel *model = new NNmodel();
 
@@ -254,7 +257,7 @@ int main(int argc,     //!< number of arguments; expected to be 2
     if (!model->final) {
 	gennError("Model was not finalized in modelDefinition(). Please call model.finalize().");
     }
-
+	string path = toString(argv[1]);
 #ifndef CPU_ONLY
     chooseDevice(*model, path);
 #endif // end not CPU_ONLY
