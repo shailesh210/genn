@@ -286,7 +286,7 @@ void NNmodel::initLearnGrps()
 	for (int k= 0; k < 2; k++) {
 	    for (int j= 0, l= nModels[nt[k]].extraGlobalNeuronKernelParameters.size(); j < l; j++) {
 		string pname= nModels[nt[k]].extraGlobalNeuronKernelParameters[j];
-		string pnamefull= pname + neuronName[i];
+		string pnamefull= pname + neuronName[src];
 		string ptype= nModels[nt[k]].extraGlobalNeuronKernelParameterTypes[j];
 		if (find(synapseKernelParameters.begin(), synapseKernelParameters.end(), pnamefull) == synapseKernelParameters.end()) {
 		    // parameter wasn't registered yet - is it used?
@@ -333,7 +333,7 @@ void NNmodel::initLearnGrps()
 	for (int k= 0; k < 2; k++) {
 	    for (int j= 0, l= nModels[nt[k]].extraGlobalNeuronKernelParameters.size(); j < l; j++) {
 		string pname= nModels[nt[k]].extraGlobalNeuronKernelParameters[j];
-		string pnamefull= pname + neuronName[i];
+		string pnamefull= pname + neuronName[src];
 		string ptype= nModels[nt[k]].extraGlobalNeuronKernelParameterTypes[j];
 		if (find(simLearnPostKernelParameters.begin(), simLearnPostKernelParameters.end(), pnamefull) == simLearnPostKernelParameters.end()) {
 		    // parameter wasn't registered yet - is it used?
@@ -376,7 +376,7 @@ void NNmodel::initLearnGrps()
 	for (int k= 0; k < 2; k++) {
 	    for (int j= 0, l= nModels[nt[k]].extraGlobalNeuronKernelParameters.size(); j < l; j++) {
 		string pname= nModels[nt[k]].extraGlobalNeuronKernelParameters[j];
-		string pnamefull= pname + neuronName[i];
+		string pnamefull= pname + neuronName[src];
 		string ptype= nModels[nt[k]].extraGlobalNeuronKernelParameterTypes[j];
 		if (find(synapseDynamicsKernelParameters.begin(), synapseDynamicsKernelParameters.end(), pnamefull) == synapseDynamicsKernelParameters.end()) {
 		    // parameter wasn't registered yet - is it used?
@@ -724,7 +724,7 @@ void NNmodel::setMaxConn(const string sname, /**<  */
  */ 
 //--------------------------------------------------------------------------
 
-void NNmodel::setSpanTypeToPre(const string sname /**<  */)
+void NNmodel::setSpanTypeToPre(const string sname /**< name of the synapse group to which to apply the pre-synaptic span type */)
 {
     if (final) {
 	gennError("Trying to set spanType in a finalized model.");
@@ -839,19 +839,25 @@ void NNmodel::setSeed(unsigned int inseed /*!< the new seed  */)
 
 void NNmodel::setGPUDevice(int device)
 {
-    assert(device >= -1);
-#ifdef OPENCL
-    assert(device < (int) deviceCount[thePlatform]);
-#else // else CUDA
-    assert(device < (int) deviceCount);
-#endif // end CUDA
-    if (device == -1) GENN_PREFERENCES::autoChooseDevice= 1;
-    else {
-	GENN_PREFERENCES::autoChooseDevice= 0;
-	GENN_PREFERENCES::defaultDevice= device;
-    }
+  int deviceCount;
+  #ifndef OPENCL
+	int ret_num_platforms;
+	cl_platform_id platform_id = NULL;
+	cl_device_id device_ids[100];
+	CHECK_CL_ERRORS(clGetPlatformIDs(1, &platform_id,(cl_uint *) &ret_num_platforms));
+	CHECK_CL_ERRORS(clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, device_ids, (cl_uint *)&deviceCount));
+  #else
+	CHECK_CUDA_ERRORS(cudaGetDeviceCount(&deviceCount));
+  #endif
+  assert(device >= -1);
+  assert(device < deviceCount);
+  if (device == -1) GENN_PREFERENCES::autoChooseDevice= 1;
+  else {
+      GENN_PREFERENCES::autoChooseDevice= 0;
+      GENN_PREFERENCES::defaultDevice= device;
+  }
 }
-#endif // end CPU_ONLY
+#endif
 
 
 string NNmodel::scalarExpr(const double val) 

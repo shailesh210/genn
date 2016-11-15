@@ -28,7 +28,7 @@
 
 #include <stdint.h>
 #include <cfloat>
-
+#include <algorithm>
 
 //--------------------------------------------------------------------------
 //! \brief This function generates host and device variable definitions, of the given type and name.
@@ -630,9 +630,8 @@ void genRunner(NNmodel &model, //!< Model description
     os << "}" << ENDL;
     os << ENDL;
 #endif
-
-    //same for CUDA and OpenCL
-
+#endif
+#ifndef CPU_ONLY                //same for CUDA and OpenCL
     // generate headers for the communication utility functions such as 
     // pullXXXStateFromDevice() etc. This is useful for the brian2genn
     // interface where we do more proper compile/link and do not want
@@ -663,8 +662,8 @@ void genRunner(NNmodel &model, //!< Model description
         os << "#define push" << model.synapseName[i] << "ToDevice push" << model.synapseName[i] << "StateToDevice" << ENDL;
 	os << "void push" << model.synapseName[i] << "StateToDevice();" << ENDL;
 #ifdef OPENCL 
-	os << "#define unmap" << model.synapseName[i] << "ToDevice unmap" << model.synapseName[i] << "StateToDevice" << ENDL;
-	os << "void unmap" << model.synapseName[i] << "StateToDevice();" << ENDL;
+	os << "#define unmap_" << model.synapseName[i] << "ToDevice unmap_" << model.synapseName[i] << "StateToDevice" << ENDL;
+	os << "void unmap_" << model.synapseName[i] << "StateToDevice();" << ENDL;
 #endif
     }
     os << ENDL;
@@ -1316,13 +1315,15 @@ void genRunner(NNmodel &model, //!< Model description
        os << "CHECK_OPENCL_ERRORS(ret);" << ENDL;
         // read and compile file neuronKrnl.cl
        os << "FILE *fp;" << ENDL;
-       os << "char fileName1[] = \"./model/MBody_userdef_CODE/neuronKrnl.cl\";" << ENDL;
-       os << "char fileName2[] = \"./model/MBody_userdef_CODE/synapseKrnl.cl\";" << ENDL;
+       string modified_path=path;
+       replace( modified_path.begin(), modified_path.end(), '\\', '/');
+       os << "string fileName1 = \"" << modified_path<< "/"<< model.name <<"_CODE/neuronKrnl.cl\";" << ENDL;
+       os << "string fileName2 = \"" << modified_path<< "/"<< model.name <<"_CODE/synapseKrnl.cl\";" << ENDL;
        os << "char *source_str;" << ENDL;
        os << "size_t source_size;" << ENDL;
 
        os << "/* Load the source code containing the kernel*/" << ENDL;
-       os << "fopen_s(&fp, fileName1, \"r\");" << ENDL;
+       os << "fopen_s(&fp, fileName1.c_str(), \"r\");" << ENDL;
        os << "if (!fp) {" << ENDL;
        os << "    fprintf(stderr, \"Failed to load kernel.\\n\");" << ENDL;
        os << "    exit(1);" << ENDL;
@@ -1362,7 +1363,7 @@ void genRunner(NNmodel &model, //!< Model description
 
 
        os << "/* Load the source code containing the kernel*/" << ENDL;
-       os << "fopen_s(&fp, fileName2, \"r\");" << ENDL;
+       os << "fopen_s(&fp, fileName2.c_str(), \"r\");" << ENDL;
        os << "if (!fp) {" << ENDL;
        os << "    fprintf(stderr, \"Failed to load kernel.\\n\");" << ENDL;
        os << "    exit(1);" << ENDL;
@@ -2118,16 +2119,32 @@ void genRunner(NNmodel &model, //!< Model description
     for (int i= 0; i < model.synapseGrpN; i++) {
     if (model.synapseConnType[i]==SPARSE){
         os << "size = C" << model.synapseName[i] << ".connN;" << ENDL;
-        os << "  initializeSparseArray(&command_queue, C" << model.synapseName[i] << ",";
+        #ifndef OPENCL
+             os << "  initializeSparseArray(&command_queue, C" << model.synapseName[i] << ",";
+        #else 
+           os << "  initializeSparseArray(C" << model.synapseName[i] << ",";
+        #endif
+        
         os << " d_ind" << model.synapseName[i] << ",";
         os << " d_indInG" << model.synapseName[i] << ",";
         os << model.neuronN[model.synapseSource[i]] <<");" << ENDL;
         if (model.synapseUsesSynapseDynamics[i]) {
-        os << "  initializeSparseArrayPreInd(&command_queue, C" << model.synapseName[i] << ",";
+        #ifndef OPENCL
+            os << "  initializeSparseArrayPreInd(&command_queue, C" << model.synapseName[i] << ",";
+        #else 
+           os << "  initializeSparseArrayPreInd( C" << model.synapseName[i] << ",";
+        #endif
+        
         os << " d_preInd" << model.synapseName[i] << ");" << ENDL;
         }
         if (model.synapseUsesPostLearning[i]) {
-        os << "  initializeSparseArrayRev(&command_queue, C" << model.synapseName[i] << ",";
+        #ifndef OPENCL
+            os << "  initializeSparseArrayRev(&command_queue, C" << model.synapseName[i] << ",";
+        #else 
+            os << "  initializeSparseArrayRev(C" << model.synapseName[i] << ",";
+        #endif
+
+        
         os << "  d_revInd" << model.synapseName[i] << ",";
         os << "  d_revIndInG" << model.synapseName[i] << ",";
         os << "  d_remap" << model.synapseName[i] << ",";
@@ -2800,8 +2817,8 @@ void genRunner(NNmodel &model, //!< Model description
     else if (model.synapseGType[i] == INDIVIDUALID) { // INDIVIDUALID
         size = (model.neuronN[model.synapseSource[i]] * model.neuronN[model.synapseTarget[i]]) / 32 + 1;
         
-        os << "gp" << model.synapseName[i] << "= (uint_32 *) clEnqueueMapBuffer(command_queue, d_gp" << model.synapseName[i];   //check d_ or dd_
-        os << ", CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, " << size << "* sizeof(uint_32)";
+        os << "gp" << model.synapseName[i] << "= (uint32_t *) clEnqueueMapBuffer(command_queue, d_gp" << model.synapseName[i];   //check d_ or dd_
+        os << ", CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, " << size << "* sizeof(uint32_t)";
         os << ", 0, NULL, NULL, &ret);" << ENDL;
 
         os << "CHECK_OPENCL_ERRORS(ret);"<<ENDL;
@@ -3304,8 +3321,8 @@ void genRunner(NNmodel &model, //!< Model description
     else if (model.synapseGType[i] == INDIVIDUALID) { // INDIVIDUALID
         size = (model.neuronN[model.synapseSource[i]] * model.neuronN[model.synapseTarget[i]]) / 32 + 1;
         
-        os << "gp" << model.synapseName[i] << "= (uint_32 *) clEnqueueMapBuffer(command_queue, d_gp" << model.synapseName[i];   //check d_ or dd_
-        os << ", CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, " << size << "* sizeof(uint_32)";
+        os << "gp" << model.synapseName[i] << "= (uint32_t *) clEnqueueMapBuffer(command_queue, d_gp" << model.synapseName[i];   //check d_ or dd_
+        os << ", CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, " << size << "* sizeof(uint32_t)";
         os << ", 0, NULL, NULL, &ret);" << ENDL;
 
         os << "CHECK_OPENCL_ERRORS(ret);"<<ENDL;
@@ -4481,10 +4498,14 @@ void genRunner(NNmodel &model, //!< Model description
     os << "*/" << ENDL;
     os << "//-------------------------------------------------------------------------" << ENDL << ENDL;
     os << ENDL;
-
-    if ((deviceProp[theDevice].major >= 2) || (deviceProp[theDevice].minor >= 3)) {
-	os << "#if __CUDA_ARCH__ < 600" << ENDL;
-	os << "__device__ double atomicAdd(double* address, double val)" << ENDL;
+    int version;
+    cudaRuntimeGetVersion(&version); 
+    if ((deviceProp[theDevice].major < 6) || (version < 8000)){
+	//os << "#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600" << ENDL;
+	//os << "#else"<< ENDL;
+        //os << "#if __CUDA_ARCH__ < 600" << ENDL;
+	os << "// software version of atomic add for double precision" << ENDL;
+	os << "__device__ double atomicAddSW(double* address, double val)" << ENDL;
 	os << "{" << ENDL;
 	os << "    unsigned long long int* address_as_ull =" << ENDL;
 	os << "                                          (unsigned long long int*)address;" << ENDL;
@@ -4497,12 +4518,13 @@ void genRunner(NNmodel &model, //!< Model description
 	os << "    } while (assumed != old);" << ENDL;
 	os << "    return __longlong_as_double(old);" << ENDL;
 	os << "}" << ENDL;
-	os << "#endif"<< ENDL;
+	//os << "#endif"<< ENDL;
 	os << ENDL;
     }
 
     if (deviceProp[theDevice].major < 2) {
-	os << "__device__ float atomicAddoldGPU(float* address, float val)" << ENDL;
+	os << "// software version of atomic add for single precision float" << ENDL;
+	os << "__device__ float atomicAddSW(float* address, float val)" << ENDL;
 	os << "{" << ENDL;
 	os << "    int* address_as_ull =" << ENDL;
 	os << "                                          (int*)address;" << ENDL;
@@ -4516,7 +4538,7 @@ void genRunner(NNmodel &model, //!< Model description
 	os << "    return __int_as_float(old);" << ENDL;
 	os << "}" << ENDL;
 	os << ENDL;
-    }
+    }	
 
     os << "#include \"neuronKrnl.cc\"" << ENDL;
     if (model.synapseGrpN > 0) {
@@ -5246,6 +5268,7 @@ void genMakefile(NNmodel &model, //!< Model description
 #else // else CUDA
     string nvccFlags = "-c -x cu -arch sm_";
     nvccFlags += tS(deviceProp[theDevice].major) + tS(deviceProp[theDevice].minor);
+    nvccFlags += " " + GENN_PREFERENCES::userNvccFlags;
     if (GENN_PREFERENCES::optimizeCode) nvccFlags += " -O3 -use_fast_math";
     if (GENN_PREFERENCES::debugCode) nvccFlags += " -O0 -g -G";
     if (GENN_PREFERENCES::showPtxInfo) nvccFlags += " -Xptxas \"-v\"";
@@ -5259,12 +5282,12 @@ void genMakefile(NNmodel &model, //!< Model description
     os << "all: runner.obj" << endl;
     os << endl;
     os << "runner.obj: runner.cc" << endl;
-    os << "\t$(NVCC) $(NVCCFLAGS) $(INCLUDEFLAGS) runner.cc" << endl;   
+    os << "\t$(NVCC) $(NVCCFLAGS) $(INCLUDEFLAGS) runner.cc" << endl;
     os << endl;
     os << "clean:" << endl;
     os << "\t-del runner.obj 2>nul" << endl;
-#endif // end CUDA
-#endif // end not CPU_ONLY
+#endif
+#endif
 
 #else // UNIX
 
@@ -5285,27 +5308,28 @@ void genMakefile(NNmodel &model, //!< Model description
     os << endl;
     os << "clean:" << endl;
     os << "\trm -f runner.o" << endl;
-#else // else not CPU_ONLY
-#ifdef OPENCL
-    string cxxFlags = "-c -DOPENCL";
+#else
+#ifndef OPENCL
+    string cxxFlags = "-c ";
     if (GENN_PREFERENCES::optimizeCode) cxxFlags += " -O3 -ffast-math";
     if (GENN_PREFERENCES::debugCode) cxxFlags += " -O0 -g";
 
     os << endl;
     os << "CXXFLAGS       :=" << cxxFlags << endl;
     os << endl;
-    os << "INCLUDEFLAGS   =-I\"$(GENN_PATH)/lib/include\" -I\"$(OPENCL_PATH)/include\"" << endl;
+    os << "INCLUDEFLAGS   =-I\"$(GENN_PATH)/lib/include\"" << endl;
     os << endl;
     os << "all: runner.o" << endl;
     os << endl;
     os << "runner.o: runner.cc" << endl;
-    os << "\t$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) runner.cc -L\"$(OPENCL_PATH)/lib64\" -lOpenCL" << endl;
+    os << "\t$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) runner.cc /link /LIBPATH:\"$(OPENCL_PATH)\\lib\\x64\" OpenCL.lib" << endl;
     os << endl;
     os << "clean:" << endl;
     os << "\trm -f runner.o" << endl;
-#else // else CUDA
+#else
     string nvccFlags = "-c -x cu -arch sm_";
     nvccFlags += tS(deviceProp[theDevice].major) + tS(deviceProp[theDevice].minor);
+    nvccFlags += " " + GENN_PREFERENCES::userNvccFlags;
     if (GENN_PREFERENCES::optimizeCode) nvccFlags += " -O3 -use_fast_math -Xcompiler \"-ffast-math\"";
     if (GENN_PREFERENCES::debugCode) nvccFlags += " -O0 -g -G";
     if (GENN_PREFERENCES::showPtxInfo) nvccFlags += " -Xptxas \"-v\"";
@@ -5323,10 +5347,10 @@ void genMakefile(NNmodel &model, //!< Model description
     os << endl;
     os << "clean:" << endl;
     os << "\trm -f runner.o" << endl;
-#endif // end CUDA
-#endif // end not CPU_ONLY
+#endif
+#endif
 
-#endif // end UNIX
+#endif
 
     os.close();
 }
