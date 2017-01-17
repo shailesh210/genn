@@ -89,7 +89,7 @@ void extended_value_substitutions(string &code, vector<string> &names, string ex
 const string digits= string("0123456789");
 const string op= string("+-*/(<>= ,;")+string("\n")+string("\t");
 
-const int __mathFN = 56;
+const int __mathFN = 54;
 const char *__dnames[__mathFN]= {
     "cos",
     "sin",
@@ -100,11 +100,11 @@ const char *__dnames[__mathFN]= {
     "atan2",
     "cosh",
     "sinh",
-    "tanh",
+  //  "tanh",
     "acosh",
     "asinh",
     "atanh",
-    "exp",
+  //  "exp",
     "frexp",
     "ldexp",
     "log",
@@ -159,11 +159,11 @@ const char *__fnames[__mathFN]= {
     "atan2f",
     "coshf",
     "sinhf",
-    "tanhf",
+  //  "tanhf",
     "acoshf",
     "asinhf",
     "atanhf",
-    "expf",
+ //   "expf",
     "frexpf",
     "ldexpf",
     "logf",
