@@ -48,30 +48,30 @@ CodeHelper hlp;
 
 #ifdef OPENCL
 //set device properties for opencl
-void get_device_properties(clDeviceProp *deviceprop, int device_no)
+void get_device_properties(clDeviceProp *deviceProp, cl_uint platform, cl_uint device)
 {
 	char buffer[10240];
-	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_OPENCL_C_VERSION, sizeof(buffer), buffer, NULL));
-	deviceprop[device_no].major = (int)(buffer[9] - '0');
-	deviceprop[device_no].minor = (int)(buffer[11] - '0');
-	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &(deviceprop[device_no].MAX_WORK_GROUP_SIZE), NULL));
-	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &(deviceprop[device_no].DEVICE_LOCAL_MEM_SIZE), NULL));
-	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_ulong), &(deviceprop[device_no].DEVICE_MAX_COMPUTE_UNITS), NULL));
-	//	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_NAME, sizeof(cl_ulong), ((deviceprop)->DEVICE_NAME), NULL));
-	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &(deviceprop[device_no].DEVICE_GLOBAL_MEM_SIZE), NULL));
-	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_REGISTERS_PER_BLOCK_NV, sizeof(cl_uint), &(deviceprop[device_no].REGISTERSS_PER_BLOCK), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_OPENCL_C_VERSION, sizeof(buffer), buffer, NULL));
+	deviceProp[device].major = (int)(buffer[9] - '0');
+	deviceProp[device].minor = (int)(buffer[11] - '0');
+	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &(deviceProp[device].MAX_WORK_GROUP_SIZE), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &(deviceProp[device].DEVICE_LOCAL_MEM_SIZE), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_ulong), &(deviceProp[device].DEVICE_MAX_COMPUTE_UNITS), NULL));
+	//	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_NAME, sizeof(cl_ulong), ((deviceProp)->DEVICE_NAME), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &(deviceProp[device].DEVICE_GLOBAL_MEM_SIZE), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_REGISTERS_PER_BLOCK_NV, sizeof(cl_uint), &(deviceProp[device].REGISTERSS_PER_BLOCK), NULL));
 }
 /*
 // display device properties OPENCL
-void show_device_properties(CLDeviceProp *deviceprop, int device_no)
+void show_device_properties(clDeviceProp *deviceProp, int device)
 {
-cout << deviceprop[device_no].MAX_WORK_GROUP_SIZE <<'\n';							//maxThreadsPerBlock
-cout << deviceprop[device_no].DEVICE_LOCAL_MEM_SIZE << '\n';						//sharedMemPerBlock
-cout << deviceprop[device_no].DEVICE_MAX_COMPUTE_UNITS << '\n';					//multiProcessorCount
+cout << deviceProp[device].MAX_WORK_GROUP_SIZE <<'\n';							//maxThreadsPerBlock
+cout << deviceProp[device].DEVICE_LOCAL_MEM_SIZE << '\n';						//sharedMemPerBlock
+cout << deviceProp[device].DEVICE_MAX_COMPUTE_UNITS << '\n';					//multiProcessorCount
 //char DEVICE_NAME[100];									//name
-cout << deviceprop[device_no].DEVICE_GLOBAL_MEM_SIZE << '\n';					//totalGlobalMem
-cout << deviceprop[device_no].REGISTERSS_PER_BLOCK << '\n';						//regsPerBlock
-cout << deviceprop[device_no].MAX_WORK_UNITS_PER_COMPUTE_UNIT << '\n';
+cout << deviceProp[device].DEVICE_GLOBAL_MEM_SIZE << '\n';					//totalGlobalMem
+cout << deviceProp[device].REGISTERSS_PER_BLOCK << '\n';						//regsPerBlock
+cout << deviceProp[device].MAX_WORK_UNITS_PER_COMPUTE_UNIT << '\n';
 }
 */
 
@@ -229,12 +229,14 @@ int main(int argc,     //!< number of arguments; expected to be 2
 
 #ifndef CPU_ONLY
 
-#ifndef OPENCL
+#ifdef OPENCL
 	CHECK_CL_ERRORS(clGetPlatformIDs(1, &platform_id, &ret_num_platforms));
 	CHECK_CL_ERRORS(clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, device_ids, (cl_uint *)&deviceCount));
 	deviceProp = new CLDeviceProp[deviceCount];
-	for (int device = 0; device < deviceCount; device++){
-		get_device_properties(deviceProp, device);
+	for (cl_uint platform = 0; platform < platformCount; platform++) {
+	    for (cl_uint device = 0; device < deviceCount; device++){
+		get_device_properties(deviceProp, platform, device);
+	    }
 	}
 #else
 	CHECK_CUDA_ERRORS(cudaGetDeviceCount(&deviceCount));
