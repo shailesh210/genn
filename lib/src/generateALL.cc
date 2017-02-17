@@ -48,7 +48,7 @@ CodeHelper hlp;
 
 #ifdef OPENCL
 //set device properties for opencl
-void get_device_properties(CLDeviceProp *deviceprop, int device_no)
+void get_device_properties(clDeviceProp *deviceprop, int device_no)
 {
 	char buffer[10240];
 	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device_no], CL_DEVICE_OPENCL_C_VERSION, sizeof(buffer), buffer, NULL));

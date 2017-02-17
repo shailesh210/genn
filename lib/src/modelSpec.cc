@@ -840,7 +840,7 @@ void NNmodel::setSeed(unsigned int inseed /*!< the new seed  */)
 void NNmodel::setGPUDevice(int device)
 {
   int deviceCount;
-  #ifndef OPENCL
+  #ifdef OPENCL
 	int ret_num_platforms;
 	cl_platform_id platform_id = NULL;
 	cl_device_id device_ids[100];
