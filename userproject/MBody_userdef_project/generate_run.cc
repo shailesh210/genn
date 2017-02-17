@@ -105,9 +105,11 @@ CPU_ONLY=0 or CPU_ONLY=1 (default 0): Whether to compile in (CUDA independent) \
 
   // build it
 #ifdef _WIN32
-  cmd = "cd model && genn-buildmodel.bat ";
+  //cmd = "cd model && genn-buildmodel.bat ";
+  cmd = "cd model && genn-buildmodel.bat -t opencl ";
 #else // UNIX
-  cmd = "cd model && genn-buildmodel.sh ";
+  //cmd = "cd model && genn-buildmodel.sh ";
+  cmd = "cd model && genn-buildmodel.sh -t opencl ";
 #endif
   cmd += modelName + ".cc";
   if (dbgMode) cmd += " -d";

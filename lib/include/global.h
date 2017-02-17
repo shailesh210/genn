@@ -22,6 +22,7 @@
 #define GLOBAL_H
 
 #include <vector>
+#include <string>
 
 #ifndef CPU_ONLY
 #ifdef OPENCL
@@ -29,8 +30,8 @@
 #else
 #include <cuda.h>
 #include <cuda_runtime.h>
-#endif
-#include <string>
+#endif // OPENCL
+#endif // CPU_ONLY
 
 namespace GENN_FLAGS {
     extern unsigned int calcSynapseDynamics;
@@ -57,22 +58,6 @@ namespace GENN_PREFERENCES {
     extern std::string userNvccFlags; //!< Allows users to set specific nvcc compiler options they may want to use for all GPU code (identical for windows and unix platforms)
 };
 
-#ifndef OPENCL
-	struct CLDeviceProp{
-		int MAX_WORK_GROUP_SIZE;							//maxThreadsPerBlock
-		unsigned long DEVICE_LOCAL_MEM_SIZE;						//sharedMemPerBlock
-		unsigned int DEVICE_MAX_COMPUTE_UNITS;					//multiProcessorCount
-		char DEVICE_NAME[1000];									//name
-		unsigned long DEVICE_GLOBAL_MEM_SIZE;					//totalGlobalMem
-		unsigned int REGISTERSS_PER_BLOCK;						//regsPerBlock
-		unsigned int MAX_WORK_UNITS_PER_COMPUTE_UNIT;			//maxThreadsPerMultiProcessor      CHECK THIS LATER	
-		int major;												//device version major
-		int minor;												//device version minor
-};
-#endif  //OPENCL
-
-
-
 extern int neuronBlkSz; //!< Global variable containing the GPU block size for the neuron kernel
 extern int synapseBlkSz; //!< Global variable containing the GPU block size for the synapse kernel
 extern int learnBlkSz; //!< Global variable containing the GPU block size for the learn kernel
@@ -87,25 +72,41 @@ extern int hostCount; //!< Global variable containing the number of hosts within
 
 
 #ifndef CPU_ONLY
-	#ifndef OPENCL
-		extern CLDeviceProp *deviceProp;
-		extern int theDevice;		//!< Global variable containing the currently selected OPENCL device's number
-		extern int deviceCount;	//!< Global variable containing the number of OPENCL devices on this host
-		extern cl_device_id device_ids[100];		//array of device ids ; for now 100...try replace by num_of _devices
-		extern cl_platform_id platform_id;  //!< Global variables platform_id
-		extern cl_uint ret_num_platforms;			//!< Global variables number of platforms
-	
-	#else
-		extern cudaDeviceProp *deviceProp;
-		extern int theDevice; //!< Global variable containing the currently selected CUDA device's number
-		extern int deviceCount; //!< Global variable containing the number of CUDA devices on this host
-		
-			
-	#endif  // OPENCL
-#endif
+#ifdef OPENCL
+
+struct clDeviceProp {
+    int MAX_WORK_GROUP_SIZE;				//maxThreadsPerBlock
+    unsigned long DEVICE_LOCAL_MEM_SIZE;		//sharedMemPerBlock
+    unsigned int DEVICE_MAX_COMPUTE_UNITS;		//multiProcessorCount
+    char DEVICE_NAME[1000];				//name
+    unsigned long DEVICE_GLOBAL_MEM_SIZE;		//totalGlobalMem
+    unsigned int REGISTERSS_PER_BLOCK;			//regsPerBlock
+    unsigned int MAX_WORK_UNITS_PER_COMPUTE_UNIT;	//maxThreadsPerMultiProcessor      CHECK THIS LATER
+    int major;						//device version major
+    int minor;						//device version minor
+};
 
 const cl_uint max_platforms = 10;
 const cl_uint max_devices = 10;
+
+extern clDeviceProp **deviceProp;
+extern cl_uint thePlatform;
+extern cl_uint theDevice;		//!< Global variable containing the currently selected OPENCL device's number
+extern cl_uint platformCount;
+extern cl_uint deviceCount[max_platforms]; //!< Global variable containing the number of OPENCL devices on this host
+extern cl_platform_id platform_ids[max_platforms];  //!< Global variables platform_id
+extern cl_device_id device_ids[max_platforms][max_devices]; //Array of device ids ; for now 100...try replace by num_of _devices
+
+
+
+extern cl_uint ret_num_platforms;			//!< Global variables number of platforms
+
+#else
+extern cudaDeviceProp *deviceProp;
+extern int theDevice; //!< Global variable containing the currently selected CUDA device's number
+extern int deviceCount; //!< Global variable containing the number of CUDA devices on this host
+#endif // OPENCL
+#endif // CPU_ONLY
 
 extern int hostCount; //!< Global variable containing the number of hosts within the local compute cluster
 
