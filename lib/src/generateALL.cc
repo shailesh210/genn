@@ -51,15 +51,15 @@ CodeHelper hlp;
 void get_device_properties(clDeviceProp *deviceProp, cl_uint platform, cl_uint device)
 {
 	char buffer[10240];
-	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_OPENCL_C_VERSION, sizeof(buffer), buffer, NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(deviceID[platform][device], CL_DEVICE_OPENCL_C_VERSION, sizeof(buffer), buffer, NULL));
 	deviceProp[device].major = (int)(buffer[9] - '0');
 	deviceProp[device].minor = (int)(buffer[11] - '0');
-	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &(deviceProp[device].MAX_WORK_GROUP_SIZE), NULL));
-	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &(deviceProp[device].DEVICE_LOCAL_MEM_SIZE), NULL));
-	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_ulong), &(deviceProp[device].DEVICE_MAX_COMPUTE_UNITS), NULL));
-	//	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_NAME, sizeof(cl_ulong), ((deviceProp)->DEVICE_NAME), NULL));
-	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &(deviceProp[device].DEVICE_GLOBAL_MEM_SIZE), NULL));
-	CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[device], CL_DEVICE_REGISTERS_PER_BLOCK_NV, sizeof(cl_uint), &(deviceProp[device].REGISTERSS_PER_BLOCK), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(deviceID[platform][device], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &(deviceProp[device].MAX_WORK_GROUP_SIZE), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(deviceID[platform][device], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &(deviceProp[device].DEVICE_LOCAL_MEM_SIZE), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(deviceID[platform][device], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_ulong), &(deviceProp[device].DEVICE_MAX_COMPUTE_UNITS), NULL));
+	//	CHECK_CL_ERRORS(clGetDeviceInfo(deviceID[platform][device], CL_DEVICE_NAME, sizeof(cl_ulong), ((deviceProp)->DEVICE_NAME), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(deviceID[platform][device], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &(deviceProp[device].DEVICE_GLOBAL_MEM_SIZE), NULL));
+	CHECK_CL_ERRORS(clGetDeviceInfo(deviceID[platform][device], CL_DEVICE_REGISTERS_PER_BLOCK_NV, sizeof(cl_uint), &(deviceProp[device].REGISTERSS_PER_BLOCK), NULL));
 }
 /*
 // display device properties OPENCL
@@ -229,22 +229,34 @@ int main(int argc,     //!< number of arguments; expected to be 2
 
 #ifndef CPU_ONLY
 
+
+
+
 #ifdef OPENCL
-	CHECK_CL_ERRORS(clGetPlatformIDs(1, &platform_id, &ret_num_platforms));
-	CHECK_CL_ERRORS(clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, device_ids, (cl_uint *)&deviceCount));
-	deviceProp = new CLDeviceProp[deviceCount];
-	for (cl_uint platform = 0; platform < platformCount; platform++) {
-	    for (cl_uint device = 0; device < deviceCount; device++){
-		get_device_properties(deviceProp, platform, device);
-	    }
+
+    CHECK_CL_ERRORS(clGetPlatformIDs(maxPlatforms, platformID, &platformCount));
+    deviceProp = new clDeviceProp *[platformCount];
+
+    for (cl_uint platform = 0; platform < platformCount; platform++) {
+
+	CHECK_CL_ERRORS(clGetDeviceIDs(platformID[platform], CL_DEVICE_TYPE_GPU, maxDevices, deviceID[platform], &deviceCount[platform]));
+	deviceProp[platform] = new clDeviceProp[deviceCount[platform]];
+
+	for (cl_uint device = 0; device < deviceCount[platform]; device++) {
+	    get_device_properties(deviceProp, platform, device);
 	}
+    }
+
+
+
+
 #else
-	CHECK_CUDA_ERRORS(cudaGetDeviceCount(&deviceCount));
-	deviceProp = new cudaDeviceProp[deviceCount];
-	for (int device = 0; device < deviceCount; device++) {
-		CHECK_CUDA_ERRORS(cudaSetDevice(device));
-		CHECK_CUDA_ERRORS(cudaGetDeviceProperties(&(deviceProp[device]), device));
-	}
+    CHECK_CUDA_ERRORS(cudaGetDeviceCount(&deviceCount));
+    deviceProp = new cudaDeviceProp[deviceCount];
+    for (int device = 0; device < deviceCount[platform]; device++) {
+	CHECK_CUDA_ERRORS(cudaSetDevice(device));
+	CHECK_CUDA_ERRORS(cudaGetDeviceProperties(&(deviceProp[device]), device));
+    }
 #endif  // OPENCL
 #endif // CPU_ONLY
 
@@ -259,7 +271,7 @@ int main(int argc,     //!< number of arguments; expected to be 2
     if (!model->final) {
 	gennError("Model was not finalized in modelDefinition(). Please call model.finalize().");
     }
-	string path = toString(argv[1]);
+
 #ifndef CPU_ONLY
     chooseDevice(*model, path);
 #endif // end not CPU_ONLY

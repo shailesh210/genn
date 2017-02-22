@@ -677,7 +677,7 @@ void genRunner(NNmodel &model, //!< Model description
 	os << "void pull" << model.neuronName[i] << "SpikeEventsFromDevice();" << ENDL;
         os << "void pull" << model.neuronName[i] << "CurrentSpikesFromDevice();" << ENDL;
         os << "void pull" << model.neuronName[i] << "CurrentSpikeEventsFromDevice();" << ENDL;
-#ifndef OPENCL 
+#ifdef OPENCL 
 	os << "void unmap_" << model.neuronName[i] << "StateFromDevice();" << ENDL;
 	os << "void unmap_" << model.neuronName[i] << "SpikesFromDevice();" << ENDL;
 	os << "void unmap_" << model.neuronName[i] << "SpikeEventsFromDevice();" << ENDL;
@@ -688,7 +688,7 @@ void genRunner(NNmodel &model, //!< Model description
     for (int i = 0; i < model.synapseGrpN; i++) {
 	os << "#define pull" << model.synapseName[i] << "FromDevice pull" << model.synapseName[i] << "StateFromDevice" << ENDL;
 	os << "void pull" << model.synapseName[i] << "StateFromDevice();" << ENDL;
-#ifndef OPENCL
+#ifdef OPENCL
 	os << "#define unamp" << model.synapseName[i] << "FromDevice unmap_" << model.synapseName[i] << "StateFromDevice" << ENDL;
 	os << "void unmap_" << model.synapseName[i] << "StateFromDevice();" << ENDL;
 #endif
@@ -2119,7 +2119,7 @@ void genRunner(NNmodel &model, //!< Model description
     for (int i= 0; i < model.synapseGrpN; i++) {
     if (model.synapseConnType[i]==SPARSE){
         os << "size = C" << model.synapseName[i] << ".connN;" << ENDL;
-        #ifndef OPENCL
+        #ifdef OPENCL
              os << "  initializeSparseArray(&command_queue, C" << model.synapseName[i] << ",";
         #else 
            os << "  initializeSparseArray(C" << model.synapseName[i] << ",";
@@ -2129,7 +2129,7 @@ void genRunner(NNmodel &model, //!< Model description
         os << " d_indInG" << model.synapseName[i] << ",";
         os << model.neuronN[model.synapseSource[i]] <<");" << ENDL;
         if (model.synapseUsesSynapseDynamics[i]) {
-        #ifndef OPENCL
+        #ifdef OPENCL
             os << "  initializeSparseArrayPreInd(&command_queue, C" << model.synapseName[i] << ",";
         #else 
            os << "  initializeSparseArrayPreInd( C" << model.synapseName[i] << ",";
@@ -2138,7 +2138,7 @@ void genRunner(NNmodel &model, //!< Model description
         os << " d_preInd" << model.synapseName[i] << ");" << ENDL;
         }
         if (model.synapseUsesPostLearning[i]) {
-        #ifndef OPENCL
+        #ifdef OPENCL
             os << "  initializeSparseArrayRev(&command_queue, C" << model.synapseName[i] << ",";
         #else 
             os << "  initializeSparseArrayRev(C" << model.synapseName[i] << ",";
@@ -5309,20 +5309,21 @@ void genMakefile(NNmodel &model, //!< Model description
     os << "clean:" << endl;
     os << "\trm -f runner.o" << endl;
 #else
-#ifndef OPENCL
-    string cxxFlags = "-c ";
+#ifdef OPENCL
+    string cxxFlags = "-c -DOPENCL";
     if (GENN_PREFERENCES::optimizeCode) cxxFlags += " -O3 -ffast-math";
     if (GENN_PREFERENCES::debugCode) cxxFlags += " -O0 -g";
 
     os << endl;
     os << "CXXFLAGS       :=" << cxxFlags << endl;
     os << endl;
-    os << "INCLUDEFLAGS   =-I\"$(GENN_PATH)/lib/include\"" << endl;
+    //os << "INCLUDEFLAGS   =-I\"$(GENN_PATH)/lib/include\" -I\"$(OPENCL_PATH)/include\"" << endl;
+    os << "INCLUDEFLAGS   =-I\"$(GENN_PATH)/lib/include\" -I\"/opt/intel/opencl/include\"" << endl;
     os << endl;
     os << "all: runner.o" << endl;
     os << endl;
     os << "runner.o: runner.cc" << endl;
-    os << "\t$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) runner.cc /link /LIBPATH:\"$(OPENCL_PATH)\\lib\\x64\" OpenCL.lib" << endl;
+    os << "\t$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) runner.cc" << endl;
     os << endl;
     os << "clean:" << endl;
     os << "\trm -f runner.o" << endl;

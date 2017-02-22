@@ -55,6 +55,7 @@ LIBGENN_OBJ                  :=$(addprefix $(LIBGENN_OBJ_PATH)/,$(LIBGENN_OBJ))
 
 # Global CUDA compiler settings
 ifndef CPU_ONLY
+    OPENCL_PATH              ?=/opt/intel/opencl
     CUDA_PATH                ?=/usr/local/cuda
     NVCC                     :="$(CUDA_PATH)/bin/nvcc"
 endif
@@ -79,23 +80,27 @@ ARFLAGS                      :=-rcs
 
 # Global include and link flags
 ifndef CPU_ONLY
-    INCLUDE_FLAGS            :=-I"$(INC_PATH)" -I"$(CUDA_PATH)/include"
+    ifdef OPENCL
+        INCLUDE_FLAGS            :=-I"$(INC_PATH)" -I"$(OPENCL_PATH)/include"
+    else
+        INCLUDE_FLAGS            :=-I"$(INC_PATH)" -I"$(CUDA_PATH)/include"
+    endif
     ifeq ($(DARWIN),DARWIN)
         ifdef OPENCL
-            LINK_FLAGS       :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib" -lgenn_OPENCL -lOpenCL -lstdc++ -lc++
+            LINK_FLAGS       :=-L"$(LIBGENN_PATH)" -L"$(OPENCL_PATH)" -lgenn_OPENCL -lOpenCL -lstdc++ -lc++
         else
             LINK_FLAGS       :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib" -lgenn -lcuda -lcudart -lstdc++ -lc++
         endif
     else
         ifeq ($(OS_SIZE),32)
             ifdef OPENCL
-                LINK_FLAGS   :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib" -lgenn_OPENCL -lOpenCL
+                LINK_FLAGS   :=-L"$(LIBGENN_PATH)" -L"$(OPENCL_PATH)" -lgenn_OPENCL -lOpenCL
             else
                 LINK_FLAGS   :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib" -lgenn -lcuda -lcudart
             endif
         else
             ifdef OPENCL
-                LINK_FLAGS   :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib64" -lgenn_OPENCL -lOpenCL
+                LINK_FLAGS   :=-L"$(LIBGENN_PATH)" -L"$(OPENCL_PATH)" -lgenn_OPENCL -lOpenCL
             else
                 LINK_FLAGS   :=-L"$(LIBGENN_PATH)" -L"$(CUDA_PATH)/lib64" -lgenn -lcuda -lcudart
             endif

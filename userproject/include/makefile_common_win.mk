@@ -28,7 +28,11 @@ NVCCFLAGS               =$(NVCCFLAGS) $(NVCC_OPTIMIZATIONFLAGS) -Xcompiler "$(OP
 
 # Global C++ compiler settings
 !IFNDEF CPU_ONLY
+!IFDEF OPENCL
+CXXFLAGS                =$(CXXFLAGS) /nologo /EHsc /DOPENCL
+!ELSE
 CXXFLAGS                =$(CXXFLAGS) /nologo /EHsc
+!ENDIF
 !ELSE
 CXXFLAGS                =$(CXXFLAGS) /nologo /EHsc /DCPU_ONLY
 !ENDIF
@@ -40,20 +44,19 @@ CXXFLAGS                =$(CXXFLAGS) $(OPTIMIZATIONFLAGS)
 
 # Global include and link flags
 !IFNDEF CPU_ONLY
-!IFNDEF OPENCL
+!IFDEF OPENCL
 INCLUDE_FLAGS           =/I"$(GENN_PATH)\lib\include" /I"$(GENN_PATH)\userproject\include" /I"$(OPENCL_PATH)\include"
 !ELSE
 INCLUDE_FLAGS           =/I"$(GENN_PATH)\lib\include" /I"$(GENN_PATH)\userproject\include" /I"$(CUDA_PATH)\include"
 !ENDIF
 !IF "$(PROCESSOR_ARCHITECTURE)" == "AMD64" || "$(PROCESSOR_ARCHITEW6432)" == "AMD64"
-!IFNDEF OPENCL
+!IFDEF OPENCL
 LINK_FLAGS              ="$(GENN_PATH)\lib\lib\genn.lib" "$(OPENCL_PATH)\lib\x64\OpenCL.lib"
 !ELSE
 LINK_FLAGS              ="$(GENN_PATH)\lib\lib\genn.lib" "$(CUDA_PATH)\lib\x64\cudart.lib" "$(CUDA_PATH)\lib\x64\cuda.lib"
 !ENDIF
-
 !ELSE
-!IFNDEF OPENCL
+!IFDEF OPENCL
 LINK_FLAGS              ="$(GENN_PATH)\lib\lib\genn.lib" "$(OPENCL_PATH)\lib\Win32\OpenCL.lib"
 !ELSE
 LINK_FLAGS              ="$(GENN_PATH)\lib\lib\genn.lib" "$(CUDA_PATH)\lib\Win32\cudart.lib" "$(CUDA_PATH)\lib\Win32\cuda.lib"

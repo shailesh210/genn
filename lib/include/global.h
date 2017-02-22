@@ -86,20 +86,17 @@ struct clDeviceProp {
     int minor;						//device version minor
 };
 
-const cl_uint max_platforms = 10;
-const cl_uint max_devices = 10;
+const cl_uint maxPlatforms = 10;
+const cl_uint maxDevices = 10;
 
 extern clDeviceProp **deviceProp;
 extern cl_uint thePlatform;
 extern cl_uint theDevice;		//!< Global variable containing the currently selected OPENCL device's number
 extern cl_uint platformCount;
-extern cl_uint deviceCount[max_platforms]; //!< Global variable containing the number of OPENCL devices on this host
-extern cl_platform_id platform_ids[max_platforms];  //!< Global variables platform_id
-extern cl_device_id device_ids[max_platforms][max_devices]; //Array of device ids ; for now 100...try replace by num_of _devices
+extern cl_uint deviceCount[maxPlatforms]; //!< Global variable containing the number of OPENCL devices on this host
+extern cl_platform_id platformID[maxPlatforms];  //!< Global variables platform_id
+extern cl_device_id deviceID[maxPlatforms][maxDevices]; //Array of device ids ; for now 100...try replace by num_of _devices
 
-
-
-extern cl_uint ret_num_platforms;			//!< Global variables number of platforms
 
 #else
 extern cudaDeviceProp *deviceProp;

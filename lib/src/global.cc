@@ -65,9 +65,9 @@ clDeviceProp **deviceProp;
 cl_uint thePlatform; //!< The currently selected OpenCL platform
 cl_uint theDevice; //!< The currently selected OpenCL device
 cl_uint platformCount; //!< The number of OpenCL platforms present on the system
-cl_uint deviceCount[max_platforms]; //!< The number of OpenCL devices for each platform present on the system
-cl_platform_id platform_ids[max_platforms]; //!< The OpenCL platforms
-cl_device_id device_ids[max_platforms][max_devices]; //!< The OpenCL devices for each platform
+cl_uint deviceCount[maxPlatforms]; //!< The number of OpenCL devices for each platform present on the system
+cl_platform_id platformID[maxPlatforms]; //!< The OpenCL platforms
+cl_device_id deviceID[maxPlatforms][maxDevices]; //!< The OpenCL devices for each platform
 
 #else // else CUDA
 cudaDeviceProp *deviceProp;

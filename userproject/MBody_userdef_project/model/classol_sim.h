@@ -26,7 +26,9 @@ using namespace std;
 #include "stringUtils.h"
 
 #ifndef CPU_ONLY
+#ifndef OPENCL
 #include <cuda_runtime.h>
+#endif
 #endif
 
 #include "MBody_userdef.cc"

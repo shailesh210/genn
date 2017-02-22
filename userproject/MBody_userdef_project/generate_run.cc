@@ -20,6 +20,8 @@ This file compiles to a tool that wraps all the other tools into one chain of ta
 */ 
 //--------------------------------------------------------------------------
 
+#define OPENCL
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -105,11 +107,12 @@ CPU_ONLY=0 or CPU_ONLY=1 (default 0): Whether to compile in (CUDA independent) \
 
   // build it
 #ifdef _WIN32
-  //cmd = "cd model && genn-buildmodel.bat ";
-  cmd = "cd model && genn-buildmodel.bat -t opencl ";
+  cmd = "cd model && genn-buildmodel.bat ";
 #else // UNIX
-  //cmd = "cd model && genn-buildmodel.sh ";
-  cmd = "cd model && genn-buildmodel.sh -t opencl ";
+  cmd = "cd model && genn-buildmodel.sh ";
+#endif
+#ifdef OPENCL
+  cmd += "-t opencl ";
 #endif
   cmd += modelName + ".cc";
   if (dbgMode) cmd += " -d";
@@ -118,6 +121,9 @@ CPU_ONLY=0 or CPU_ONLY=1 (default 0): Whether to compile in (CUDA independent) \
   cmd += " && nmake /nologo /f WINmakefile clean all ";
 #else // UNIX
   cmd += " && make clean all ";
+#endif
+#ifdef OPENCL
+  cmd += "OPENCL=1 ";
 #endif
   cmd += "SIM_CODE=" + modelName + "_CODE";
   if (dbgMode) cmd += " DEBUG=1";

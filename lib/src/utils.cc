@@ -37,14 +37,14 @@
 void get_device_properties(clDeviceProp **deviceProp, cl_uint platform, cl_uint device)
 {
     char buffer[2048];
-    CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[platform][device], CL_DEVICE_OPENCL_C_VERSION, sizeof(buffer), buffer, NULL));
+    CHECK_CL_ERRORS(clGetDeviceInfo(deviceID[platform][device], CL_DEVICE_OPENCL_C_VERSION, sizeof(buffer), buffer, NULL));
     deviceProp[platform][device].major = (int)(buffer[9] - '0');
     deviceProp[platform][device].minor = (int)(buffer[11] - '0');
-    CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[platform][device], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &(deviceProp[platform][device].MAX_WORK_GROUP_SIZE), NULL));
-    CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[platform][device], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &(deviceProp[platform][device].DEVICE_LOCAL_MEM_SIZE), NULL));
-    CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[platform][device], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_ulong), &(deviceProp[platform][device].DEVICE_MAX_COMPUTE_UNITS), NULL));
-    CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[platform][device], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &(deviceProp[platform][device].DEVICE_GLOBAL_MEM_SIZE), NULL));
-    CHECK_CL_ERRORS(clGetDeviceInfo(device_ids[platform][device], CL_DEVICE_REGISTERS_PER_BLOCK_NV, sizeof(cl_uint), &(deviceProp[platform][device].REGISTERSS_PER_BLOCK), NULL));
+    CHECK_CL_ERRORS(clGetDeviceInfo(deviceID[platform][device], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &(deviceProp[platform][device].MAX_WORK_GROUP_SIZE), NULL));
+    CHECK_CL_ERRORS(clGetDeviceInfo(deviceID[platform][device], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &(deviceProp[platform][device].DEVICE_LOCAL_MEM_SIZE), NULL));
+    CHECK_CL_ERRORS(clGetDeviceInfo(deviceID[platform][device], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_ulong), &(deviceProp[platform][device].DEVICE_MAX_COMPUTE_UNITS), NULL));
+    CHECK_CL_ERRORS(clGetDeviceInfo(deviceID[platform][device], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &(deviceProp[platform][device].DEVICE_GLOBAL_MEM_SIZE), NULL));
+    CHECK_CL_ERRORS(clGetDeviceInfo(deviceID[platform][device], CL_DEVICE_REGISTERS_PER_BLOCK_NV, sizeof(cl_uint), &(deviceProp[platform][device].REGISTERSS_PER_BLOCK), NULL));
 }
 
 

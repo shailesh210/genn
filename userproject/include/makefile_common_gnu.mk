@@ -24,6 +24,7 @@ DARWIN                  :=$(strip $(findstring DARWIN,$(OS_UPPER)))
 
 # Global CUDA compiler settings
 ifndef CPU_ONLY
+    OPENCL_PATH         ?=/opt/intel/opencl
     CUDA_PATH           ?=/usr/local/cuda
     NVCC                :="$(CUDA_PATH)/bin/nvcc"
 endif
@@ -38,7 +39,11 @@ ifeq ($(DARWIN),DARWIN)
     CXX                 :=clang++
 endif
 ifndef CPU_ONLY
-    CXXFLAGS            +=-std=c++11
+    ifdef OPENCL
+        CXXFLAGS        +=-std=c++11 -DOPENCL
+    else
+        CXXFLAGS        +=-std=c++11
+    endif
 else
     CXXFLAGS            +=-std=c++11 -DCPU_ONLY
 endif
@@ -50,14 +55,26 @@ endif
 
 # Global include and link flags
 ifndef CPU_ONLY
-    INCLUDE_FLAGS       +=-I"$(GENN_PATH)/lib/include" -I"$(GENN_PATH)/userproject/include" -I"$(CUDA_PATH)/include"
-    ifeq ($(DARWIN),DARWIN)
-        LINK_FLAGS      +=-L"$(GENN_PATH)/lib/lib" -L"$(CUDA_PATH)/lib" -lgenn -lcuda -lcudart -lstdc++ -lc++
+    ifdef OPENCL
+        INCLUDE_FLAGS   +=-I"$(GENN_PATH)/lib/include" -I"$(GENN_PATH)/userproject/include" -I"$(OPENCL_PATH)/include"
     else
-        ifeq ($(OS_SIZE),32)
-            LINK_FLAGS  +=-L"$(GENN_PATH)/lib/lib" -L"$(CUDA_PATH)/lib" -lgenn -lcuda -lcudart
+        INCLUDE_FLAGS   +=-I"$(GENN_PATH)/lib/include" -I"$(GENN_PATH)/userproject/include" -I"$(CUDA_PATH)/include"
+    endif
+    ifeq ($(DARWIN),DARWIN)
+        ifdef OPENCL
+            LINK_FLAGS  +=-L"$(GENN_PATH)/lib/lib" -L"$(OPENCL_PATH)" -lgenn -lOpenCL -lstdc++ -lc++
         else
-            LINK_FLAGS  +=-L"$(GENN_PATH)/lib/lib" -L"$(CUDA_PATH)/lib64" -lgenn -lcuda -lcudart
+            LINK_FLAGS  +=-L"$(GENN_PATH)/lib/lib" -L"$(CUDA_PATH)/lib" -lgenn -lcuda -lcudart -lstdc++ -lc++
+        endif
+    else
+        ifdef OPENCL
+            LINK_FLAGS  +=-L"$(GENN_PATH)/lib/lib" -L"$(OPENCL_PATH)" -lgenn -lOpenCL
+        else
+            ifeq ($(OS_SIZE),32)
+                LINK_FLAGS  +=-L"$(GENN_PATH)/lib/lib" -L"$(CUDA_PATH)/lib" -lgenn -lcuda -lcudart
+            else
+                LINK_FLAGS  +=-L"$(GENN_PATH)/lib/lib" -L"$(CUDA_PATH)/lib64" -lgenn -lcuda -lcudart
+            endif
         endif
     endif
 else
