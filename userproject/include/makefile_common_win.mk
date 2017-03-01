@@ -43,7 +43,7 @@ CXXFLAGS                =$(CXXFLAGS) $(OPTIMIZATIONFLAGS)
 !ENDIF
 
 # Global include and link flags
-!IFNDEF CPU_ONLY
+IFNDEF CPU_ONLY
 !IFDEF OPENCL
 INCLUDE_FLAGS           =/I"$(GENN_PATH)\lib\include" /I"$(GENN_PATH)\userproject\include" /I"$(OPENCL_PATH)\include"
 !ELSE
@@ -51,13 +51,13 @@ INCLUDE_FLAGS           =/I"$(GENN_PATH)\lib\include" /I"$(GENN_PATH)\userprojec
 !ENDIF
 !IF "$(PROCESSOR_ARCHITECTURE)" == "AMD64" || "$(PROCESSOR_ARCHITEW6432)" == "AMD64"
 !IFDEF OPENCL
-LINK_FLAGS              ="$(GENN_PATH)\lib\lib\genn.lib" "$(OPENCL_PATH)\lib\x64\OpenCL.lib"
+LINK_FLAGS              ="$(GENN_PATH)\lib\lib\genn_OPENCL.lib" "$(OPENCL_PATH)\lib\x64\OpenCL.lib"
 !ELSE
 LINK_FLAGS              ="$(GENN_PATH)\lib\lib\genn.lib" "$(CUDA_PATH)\lib\x64\cudart.lib" "$(CUDA_PATH)\lib\x64\cuda.lib"
 !ENDIF
 !ELSE
 !IFDEF OPENCL
-LINK_FLAGS              ="$(GENN_PATH)\lib\lib\genn.lib" "$(OPENCL_PATH)\lib\Win32\OpenCL.lib"
+LINK_FLAGS              ="$(GENN_PATH)\lib\lib\genn_OPENCL.lib" "$(OPENCL_PATH)\lib\Win32\OpenCL.lib"
 !ELSE
 LINK_FLAGS              ="$(GENN_PATH)\lib\lib\genn.lib" "$(CUDA_PATH)\lib\Win32\cudart.lib" "$(CUDA_PATH)\lib\Win32\cuda.lib"
 !ENDIF

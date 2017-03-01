@@ -1313,7 +1313,8 @@ void genRunner(NNmodel &model, //!< Model description
        os << "/* Create Command Queue */" << ENDL;
        os << "command_queue = clCreateCommandQueue(context, device_Ids["<< theDevice <<"], 0, &ret);" << ENDL;
        os << "CHECK_OPENCL_ERRORS(ret);" << ENDL;
-        // read and compile file neuronKrnl.cl
+
+       // read and compile file neuronKrnl.cl
        os << "FILE *fp;" << ENDL;
        string modified_path=path;
        replace( modified_path.begin(), modified_path.end(), '\\', '/');
@@ -1323,7 +1324,13 @@ void genRunner(NNmodel &model, //!< Model description
        os << "size_t source_size;" << ENDL;
 
        os << "/* Load the source code containing the kernel*/" << ENDL;
-       os << "fopen_s(&fp, fileName1.c_str(), \"r\");" << ENDL;
+
+
+       //os << "fopen_s(&fp, fileName1.c_str(), \"r\");" << ENDL;
+       os << "fp = fopen(fileName1.c_str(), \"r\");" << ENDL;
+
+
+
        os << "if (!fp) {" << ENDL;
        os << "    fprintf(stderr, \"Failed to load kernel.\\n\");" << ENDL;
        os << "    exit(1);" << ENDL;
@@ -1360,10 +1367,14 @@ void genRunner(NNmodel &model, //!< Model description
        os << "fp=NULL;" << ENDL;
        os << "source_str=NULL;" << ENDL;
 
-
-
        os << "/* Load the source code containing the kernel*/" << ENDL;
-       os << "fopen_s(&fp, fileName2.c_str(), \"r\");" << ENDL;
+
+
+       //os << "fopen_s(&fp, fileName2.c_str(), \"r\");" << ENDL;
+       os << "fp = fopen(fileName2.c_str(), \"r\");" << ENDL;
+
+
+
        os << "if (!fp) {" << ENDL;
        os << "    fprintf(stderr, \"Failed to load kernel.\\n\");" << ENDL;
        os << "    exit(1);" << ENDL;

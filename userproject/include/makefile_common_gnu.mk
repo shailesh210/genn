@@ -62,13 +62,13 @@ ifndef CPU_ONLY
     endif
     ifeq ($(DARWIN),DARWIN)
         ifdef OPENCL
-            LINK_FLAGS  +=-L"$(GENN_PATH)/lib/lib" -L"$(OPENCL_PATH)" -lgenn -lOpenCL -lstdc++ -lc++
+            LINK_FLAGS  +=-L"$(GENN_PATH)/lib/lib" -L"$(OPENCL_PATH)" -lgenn_OPENCL -lOpenCL -lstdc++ -lc++
         else
             LINK_FLAGS  +=-L"$(GENN_PATH)/lib/lib" -L"$(CUDA_PATH)/lib" -lgenn -lcuda -lcudart -lstdc++ -lc++
         endif
     else
         ifdef OPENCL
-            LINK_FLAGS  +=-L"$(GENN_PATH)/lib/lib" -L"$(OPENCL_PATH)" -lgenn -lOpenCL
+            LINK_FLAGS  +=-L"$(GENN_PATH)/lib/lib" -L"$(OPENCL_PATH)" -lgenn_OPENCL -lOpenCL
         else
             ifeq ($(OS_SIZE),32)
                 LINK_FLAGS  +=-L"$(GENN_PATH)/lib/lib" -L"$(CUDA_PATH)/lib" -lgenn -lcuda -lcudart
